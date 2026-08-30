@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Kanzen">
+  <rect width="96" height="96" rx="22" fill="#0b1022" />
+  <circle cx="48" cy="48" r="38" fill="none" stroke="#5eead4" stroke-width="1.6" opacity="0.45">
+    <animateTransform attributeName="transform" type="rotate" from="0 48 48" to="360 48 48" dur="11s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="86" cy="48" r="4" fill="#a78bfa">
+    <animateTransform attributeName="transform" type="rotate" from="0 48 48" to="360 48 48" dur="11s" repeatCount="indefinite" />
+  </circle>
+  <path d="M68 27 A30 30 0 1 1 37 20" fill="none" stroke="#e2542f" stroke-width="10" stroke-linecap="round"
+        stroke-dasharray="170" stroke-dashoffset="170">
+    <animate attributeName="stroke-dashoffset" values="170;0;0;170" keyTimes="0;0.4;0.9;1" dur="5s" repeatCount="indefinite" />
+  </path>
+  <circle cx="48" cy="48" r="5" fill="#e9ecff" />
+</svg>

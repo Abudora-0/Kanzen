@@ -1,0 +1,67 @@
+# Render blueprint for the parts of Kanzen that Vercel cannot host: the BullMQ
+# worker (a long lived process) and, optionally, the API as a container service.
+# Import this file at https://dashboard.render.com/blueprints
+services:
+  - type: worker
+    name: kanzen-worker
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build:worker
+    startCommand: node apps/worker/dist/index.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ROLE
+        value: worker
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: PROVIDERS_DEMO_MODE
+        value: 'false'
+      - key: ANILIST_CLIENT_ID
+        sync: false
+      - key: ANILIST_CLIENT_SECRET
+        sync: false
+      - key: TMDB_READ_TOKEN
+        sync: false
+
+  # Optional: run the API here too if you would rather not use Vercel functions.
+  - type: web
+    name: kanzen-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build:api
+    startCommand: node apps/api/dist/server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ROLE
+        value: api
+      - key: API_PORT
+        value: '10000'
+      - key: WEB_ORIGIN
+        sync: false
+      - key: API_PUBLIC_URL
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false

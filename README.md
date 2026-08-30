@@ -1,0 +1,239 @@
+<div align="center">
+
+<img src="./assets/banner.svg" alt="Kanzen" width="720" />
+
+# Kanzen
+
+**Unified media and cross-platform tracker dashboard for anime, manga, books, and movies.**
+
+Connect AniList, MyAnimeList, Kitsu, and TMDB. Kanzen folds every list into one canonical
+library, reconciles the differences, and turns the whole thing into a living chart of your taste.
+
+[![CI](https://github.com/Abudora-0/Kanzen/actions/workflows/ci.yml/badge.svg)](https://github.com/Abudora-0/Kanzen/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-e2542f.svg)](./LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20.11-5eead4.svg)](.nvmrc)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](tsconfig.base.json)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-a78bfa.svg)](./CONTRIBUTING.md)
+[![Deploy to Vercel](https://img.shields.io/badge/deploy-Vercel-000.svg)](https://vercel.com/new)
+
+`react` · `express` · `mongodb-aggregation` · `bullmq` · `redis` · `oauth2` · `data-visualization`
+
+</div>
+
+---
+
+## Why Kanzen
+
+Most trackers are a single list on a single platform. If you rate an anime on AniList, watch a
+film logged on TMDB, and read a manga tracked on MyAnimeList, your history is scattered and your
+statistics are partial. Kanzen is the layer above:
+
+- **One library.** Every connected platform is pulled into a canonical `Work` catalogue with
+  cross referenced ids, so the same title from three services is one entry.
+- **Honest reconciliation.** When platforms disagree on your progress, status, or score, Kanzen
+  surfaces the conflict and lets you resolve it in one click, then pushes the result back.
+- **Insight from real aggregation.** Taste fingerprint, completion velocity with a trailing mean,
+  franchise depth by graph traversal, a watch and read heatmap, and predicted finish dates, all
+  computed with MongoDB aggregation pipelines.
+- **A sync engine you can watch.** Background queues, per provider rate limiting, and a circuit
+  breaker, visualised on a live radar as they run.
+
+## Screens
+
+| The deck                                        | Insights                | Constellation                             |
+| ----------------------------------------------- | ----------------------- | ----------------------------------------- |
+| Counters, the continue list, and the sync pulse | Seven aggregation views | A force directed star map of your library |
+
+> The interface is dark cartographic: an aurora night sky crossed with the ink and vermillion of a
+> woodblock print. The logo is a self drawing enso that pulses while a sync runs. Scrollbars,
+> counters, dropdowns, toggles, and sliders are all themed, and everything respects
+> `prefers-reduced-motion`.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Client
+    W[React SPA<br/>Vite, Tailwind, d3-force]
+  end
+  subgraph Vercel
+    A[Express API<br/>serverless function]
+    CR[Cron: incremental sync]
+  end
+  subgraph Worker host
+    K[BullMQ workers<br/>sync, writeback, insights, token refresh]
+  end
+  subgraph Data
+    M[(MongoDB Atlas)]
+    R[(Redis / Upstash)]
+  end
+  subgraph Providers
+    P1[AniList]
+    P2[TMDB]
+    P3[MAL / Kitsu<br/>stub adapters]
+  end
+
+  W -- fetch + SSE --> A
+  A -- read / write --> M
+  A -- cache, queue, pub/sub --> R
+  A -- enqueue --> R
+  R -- jobs --> K
+  K -- OAuth2, rate limited --> P1 & P2 & P3
+  K -- upsert works, entries, activity --> M
+  CR -- enqueue or run inline --> K
+```
+
+### The sync pipeline
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant API
+  participant Q as BullMQ (Redis)
+  participant Wk as Worker
+  participant Prov as Provider
+  participant DB as MongoDB
+
+  U->>API: connect AniList (OAuth2 + PKCE)
+  API->>Q: enqueue full sync
+  Q->>Wk: sync job
+  Wk->>Prov: fetch library (Bottleneck + circuit breaker)
+  Prov-->>Wk: raw entries
+  loop each entry
+    Wk->>DB: resolve canonical Work (external ids, then title)
+    Wk->>DB: merge per provider sources, flag conflicts
+    Wk->>DB: append progress activity
+  end
+  Wk->>DB: recompute insight snapshot ($facet, $graphLookup, $setWindowFields)
+  Wk-->>API: QueueEvents progress
+  API-->>U: server sent events drive the Sync Pulse
+```
+
+### Monorepo layout
+
+```
+apps/
+  web/       Vite + React + Tailwind v4 + Framer Motion + GSAP + d3-force
+  api/       Express + Mongoose + BullMQ producer + zod  (also exports ./worker)
+  worker/    thin entrypoint that runs the BullMQ consumers
+packages/
+  shared/    domain types, zod schemas, status mapping tables
+  providers/ MediaProvider adapter interface + AniList, TMDB, MAL, Kitsu + fixtures
+api/[...path].ts   Vercel serverless entry that wraps the Express app
+```
+
+## Aggregation highlights
+
+Every insight is a named pipeline builder in `apps/api/src/insights/pipelines.ts`, unit tested
+against `mongodb-memory-server`.
+
+| Insight              | Technique                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Taste fingerprint    | `$lookup` + `$unwind` over combined genre and tag axis, score and progress weighted `$group`              |
+| Completion velocity  | `$dateTrunc` monthly `$group`, three month trailing mean via `$setWindowFields`                           |
+| Library profile      | one `$facet` returning status, format, `$bucket` score histogram, studios, and decade cuts                |
+| Cross platform drift | conflict flagged entries projected into a human readable disagreement                                     |
+| Activity heatmap     | `ActivityLog` grouped by `$dateToString` day over 53 weeks                                                |
+| Franchise depth      | `$graphLookup` walking `Work.relations` to assemble a franchise, ownership resolved against the entry set |
+| Predicted finishes   | remaining units divided by a trailing per day pace from the activity log                                  |
+
+## Running it locally
+
+Requirements: Node 20.11 or newer, pnpm 11, and either Docker or a local MongoDB and Redis.
+
+```bash
+git clone https://github.com/Abudora-0/Kanzen.git
+cd Kanzen
+pnpm install
+cp .env.example .env
+
+# start datastores (or point .env at your own)
+docker compose up -d
+
+# seed the demo library (about 45 works across four media types)
+pnpm seed
+
+# web on :5173, api on :4000, worker attached
+pnpm dev
+```
+
+Open `http://localhost:5173` and choose **Explore the demo**, or sign in with
+`demo@kanzen.app` / `constellation`.
+
+No Docker? The API ships a helper that runs an ephemeral MongoDB:
+
+```bash
+node apps/api/scripts/local-mongo.mjs   # keep this running
+pnpm seed && pnpm dev                    # Redis is optional, the app degrades gracefully
+```
+
+### Scripts
+
+| Command                        | Does                                                       |
+| ------------------------------ | ---------------------------------------------------------- |
+| `pnpm dev`                     | web, api, and worker together with hot reload              |
+| `pnpm build`                   | build every package and app                                |
+| `pnpm test`                    | Vitest across packages, including DB backed pipeline tests |
+| `pnpm test:e2e`                | Playwright smoke run against a seeded demo                 |
+| `pnpm seed`                    | reset and populate the demo library                        |
+| `pnpm lint` / `pnpm typecheck` | ESLint and project wide `tsc --noEmit`                     |
+| `pnpm check:prose`             | fail on em or en dashes anywhere in tracked text           |
+
+## Environment
+
+| Variable                                     | Purpose                                                                                 |
+| -------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `MONGODB_URI`                                | MongoDB connection string                                                               |
+| `REDIS_URL`                                  | Redis connection string, `rediss://` enables TLS for Upstash                            |
+| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`    | session token signing keys                                                              |
+| `TOKEN_ENCRYPTION_KEY`                       | 32 byte hex key, encrypts provider tokens at rest with AES-256-GCM                      |
+| `PROVIDERS_DEMO_MODE`                        | `true` serves fixture data and needs no OAuth, this is the showcase default             |
+| `DEMO_EMAIL`, `DEMO_PASSWORD`                | the seeded read only demo account                                                       |
+| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | real AniList OAuth, redirect URI is `<API_PUBLIC_URL>/api/connections/anilist/callback` |
+| `TMDB_READ_TOKEN`                            | TMDB v4 read access token                                                               |
+| `CRON_SECRET`                                | bearer token the Vercel cron sends to `/api/cron/sync`                                  |
+| `VITE_API_URL`                               | only when the web app and API are on different origins                                  |
+
+Full list with notes is in [`.env.example`](.env.example).
+
+## Deploying
+
+**Frontend and API on Vercel.** [`vercel.json`](vercel.json) builds `apps/web`, serves the SPA,
+and routes `/api/*` to the Express app in [`api/[...path].ts`](api/%5B...path%5D.ts). Add the
+environment variables with `vercel env add` and deploy. A cron hits `/api/cron/sync` every six
+hours and runs an incremental sync inline when no worker is reachable.
+
+```bash
+npm i -g vercel
+vercel link
+vercel env add MONGODB_URI        # repeat for each variable
+vercel deploy --prod
+```
+
+**Worker separately.** Vercel has no long lived process, so the BullMQ worker runs elsewhere.
+Import [`render.yaml`](render.yaml) as a Render blueprint, or build the container:
+
+```bash
+docker build -f Dockerfile.worker -t kanzen-worker .
+docker run --env-file .env kanzen-worker
+```
+
+**Data services.** MongoDB Atlas and Upstash Redis free tiers are enough for the demo.
+
+## Tech
+
+- **Frontend** React 18, Vite 6, Tailwind CSS v4, Framer Motion, GSAP, d3-force, TanStack Query, Zustand
+- **API** Express, Mongoose 8, zod, BullMQ, ioredis, Bottleneck, opossum, jsonwebtoken, bcryptjs, pino
+- **Data** MongoDB, Redis
+- **Tooling** pnpm workspaces, TypeScript project references, ESLint 9, Prettier, Husky, Vitest, Playwright
+
+## Roadmap
+
+- Real MyAnimeList and Kitsu adapters behind the existing interface
+- Recommendation surface from the taste fingerprint and franchise graph
+- Shareable read only library snapshots
+- Native Bottleneck Redis datastore for multi instance rate limiting
+
+## License
+
+[MIT](./LICENSE) &copy; 2026 Abudora-0
