@@ -37,8 +37,8 @@ jobs:
       - name: Prose check (no em dashes)
         run: node scripts/no-em-dash.mjs
 
-      - name: Build packages
-        run: pnpm --filter @kanzen/shared build && pnpm --filter @kanzen/providers build
+      - name: Build packages and api (needed for downstream typechecks)
+        run: pnpm run build:api
 
       - name: Typecheck
         run: pnpm typecheck
