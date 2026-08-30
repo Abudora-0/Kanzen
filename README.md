@@ -196,29 +196,77 @@ pnpm seed && pnpm dev                    # Redis is optional, the app degrades g
 
 Full list with notes is in [`.env.example`](.env.example).
 
-## Deploying
+## Deploying to Vercel
 
-**Frontend and API on Vercel.** [`vercel.json`](vercel.json) builds `apps/web`, serves the SPA,
-and routes `/api/*` to the Express app in [`api/[...path].ts`](api/%5B...path%5D.ts). Add the
-environment variables with `vercel env add` and deploy. A cron hits `/api/cron/sync` every six
-hours and runs an incremental sync inline when no worker is reachable.
+[`vercel.json`](vercel.json) builds `apps/web`, serves the SPA, and routes `/api/*` to the Express
+app in [`api/[...path].ts`](api/%5B...path%5D.ts). A cron hits `/api/cron/sync` every six hours and
+runs an incremental sync inline when no worker is reachable.
+
+### 1. Provision data services
+
+- **MongoDB Atlas** free cluster, network access set to `0.0.0.0/0`, copy the SRV connection string.
+- **Upstash Redis** free database, copy the `rediss://` URL. Optional but recommended; the app runs
+  without it in a degraded mode.
+
+### 2. Import the repo into Vercel
+
+New Project, select `Abudora-0/Kanzen`, framework preset **Other**. The build settings come from
+`vercel.json`, so leave them untouched.
+
+### 3. Add environment variables
+
+Generate three secrets first: `openssl rand -hex 32` (run it three times).
+
+| Variable | Value |
+| --- | --- |
+| `MONGODB_URI` | the Atlas connection string |
+| `REDIS_URL` | the Upstash `rediss://` URL (skip to run without Redis) |
+| `JWT_ACCESS_SECRET` | a 32 byte hex string |
+| `JWT_REFRESH_SECRET` | a different 32 byte hex string |
+| `TOKEN_ENCRYPTION_KEY` | a third 32 byte hex string, exactly 64 hex characters |
+| `PROVIDERS_DEMO_MODE` | `true` |
+| `CRON_SECRET` | any random string |
+| `WEB_ORIGIN` | your deployment URL, for example `https://kanzen.vercel.app` |
+| `API_PUBLIC_URL` | the same URL |
+| `DEMO_EMAIL` | `demo@kanzen.app` (optional, this is the default) |
+| `DEMO_PASSWORD` | `constellation` (optional) |
+
+Either paste them in the Vercel dashboard, or use the CLI:
 
 ```bash
-npm i -g vercel
-vercel link
-vercel env add MONGODB_URI        # repeat for each variable
+npm i -g vercel && vercel link
+printf '%s' "<value>" | vercel env add MONGODB_URI production   # repeat per variable
 vercel deploy --prod
 ```
 
-**Worker separately.** Vercel has no long lived process, so the BullMQ worker runs elsewhere.
-Import [`render.yaml`](render.yaml) as a Render blueprint, or build the container:
+### 4. Seed the demo library, once
+
+The site starts empty. Populate it with a single request:
+
+```bash
+curl -X POST "https://<your-domain>/api/cron/seed?key=<CRON_SECRET>"
+```
+
+Then open the site and choose **Explore the demo**.
+
+### Turning on real syncs
+
+Set `PROVIDERS_DEMO_MODE=false` and add `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET`
+(register at [anilist.co/settings/developer](https://anilist.co/settings/developer) with redirect
+URI `https://<your-domain>/api/connections/anilist/callback`) and `TMDB_READ_TOKEN`. Real syncs need
+the worker, which Vercel cannot host.
+
+### The worker (optional)
+
+Vercel has no long lived process, so the BullMQ worker runs elsewhere. Import
+[`render.yaml`](render.yaml) as a Render blueprint, or build the container:
 
 ```bash
 docker build -f Dockerfile.worker -t kanzen-worker .
 docker run --env-file .env kanzen-worker
 ```
 
-**Data services.** MongoDB Atlas and Upstash Redis free tiers are enough for the demo.
+Without it, the six hour Vercel cron still refreshes the demo by running syncs inline.
 
 ## Tech
 
