@@ -165,9 +165,12 @@ export function Library() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm text-ink">{titleOf(entry.work)}</p>
                       <p className="tabular text-xs text-ink-muted">
-                        {STATUS_LABEL[entry.status]} · {entry.progress}
-                        {entry.progressMax ? `/${entry.progressMax}` : ''}{' '}
-                        {PROGRESS_UNIT[entry.work.type]}
+                        {STATUS_LABEL[entry.status]}
+                        {entry.work.type === 'movie'
+                          ? ''
+                          : ` · ${entry.progress}${
+                              entry.progressMax ? `/${entry.progressMax}` : ''
+                            } ${PROGRESS_UNIT[entry.work.type]}`}
                         {entry.score ? ` · ${entry.score}` : ''}
                       </p>
                       <div className="mt-1 flex gap-1">

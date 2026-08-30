@@ -92,13 +92,25 @@ export function WorkDetail() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Panel>
           <SectionTitle eyebrow="log">Your progress</SectionTitle>
-          <Slider
-            value={progress}
-            max={max}
-            onChange={setProgress}
-            label={PROGRESS_UNIT[work.type]}
-            unit={PROGRESS_UNIT[work.type]}
-          />
+          {work.type === 'movie' ? (
+            <label className="flex items-center gap-3 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={progress >= 1}
+                onChange={(e) => setProgress(e.target.checked ? 1 : 0)}
+                className="h-4 w-4 accent-[var(--color-vermillion)]"
+              />
+              Watched
+            </label>
+          ) : (
+            <Slider
+              value={progress}
+              max={max}
+              onChange={setProgress}
+              label={PROGRESS_UNIT[work.type]}
+              unit={PROGRESS_UNIT[work.type]}
+            />
+          )}
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Select
               label="Status"
