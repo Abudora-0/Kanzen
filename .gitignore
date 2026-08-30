@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+apps/web/dist/
+apps/api/dist/
+apps/worker/dist/
+packages/*/dist/
+
+# env
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel/
+
+# test / coverage
+coverage/
+playwright-report/
+test-results/
+.nyc_output/
+
+# editor / os
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# misc
+.turbo/
+.cache/

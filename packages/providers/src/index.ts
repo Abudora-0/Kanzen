@@ -1,0 +1,10 @@
+export * from './types.js';
+export * from './errors.js';
+export * from './oauth.js';
+export * from './http.js';
+export * from './registry.js';
+export { AniListProvider } from './adapters/anilist.js';
+export { TmdbProvider } from './adapters/tmdb.js';
+export { StubProvider } from './adapters/stub.js';
+export { demoLibrary, catalogToRawWork, CATALOG, CATALOG_BY_KEY } from './fixtures/index.js';
+export type { CatalogItem } from './fixtures/index.js';
