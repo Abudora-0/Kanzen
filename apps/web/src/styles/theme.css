@@ -1,0 +1,266 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Kanzen visual identity: an aurora night sky crossed with the ink   *
+ * and vermillion of a woodblock print. Dark first, one accent.       *
+ * ------------------------------------------------------------------ */
+
+@theme {
+  --color-void: #070a16;
+  --color-night: #0b1022;
+  --color-night-2: #0f1630;
+  --color-surface: #141b38;
+  --color-surface-2: #1b2347;
+  --color-hairline: #263056;
+  --color-hairline-bright: #37427a;
+
+  --color-ink: #e9ecff;
+  --color-ink-soft: #b9c1e8;
+  --color-ink-muted: #7f8bbd;
+  --color-ink-faint: #5b649a;
+
+  --color-vermillion: #e2542f;
+  --color-vermillion-bright: #f76a41;
+  --color-vermillion-deep: #a5371b;
+  --color-gold: #d8b36a;
+  --color-aurora-teal: #5eead4;
+  --color-aurora-violet: #a78bfa;
+  --color-aurora-rose: #f4a8d4;
+
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --radius-panel: 18px;
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --shadow-lift: 0 24px 60px -24px rgba(3, 6, 20, 0.8);
+  --shadow-glow: 0 0 32px -8px rgba(94, 234, 212, 0.25);
+}
+
+:root {
+  color-scheme: dark;
+  --page-gradient:
+    radial-gradient(1200px 700px at 12% -10%, rgba(167, 139, 250, 0.18), transparent 60%),
+    radial-gradient(1000px 600px at 100% 0%, rgba(94, 234, 212, 0.12), transparent 55%),
+    radial-gradient(900px 900px at 50% 120%, rgba(226, 84, 47, 0.1), transparent 60%);
+}
+
+* {
+  border-color: var(--color-hairline);
+}
+
+html {
+  background-color: var(--color-void);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--color-night);
+  background-image: var(--page-gradient);
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'cv05';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(226, 84, 47, 0.35);
+  color: var(--color-ink);
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- themed scrollbar: thin, vermillion thumb, star ticks ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-vermillion-deep) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: linear-gradient(var(--color-night), var(--color-night));
+  border-left: 1px solid var(--color-hairline);
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-vermillion), var(--color-vermillion-deep));
+  border-radius: 999px;
+  border: 2px solid var(--color-night);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--color-vermillion-bright), var(--color-vermillion));
+}
+*::-webkit-scrollbar-corner {
+  background: var(--color-night);
+}
+
+/* ---- focus ring ---- */
+:focus-visible {
+  outline: 2px solid var(--color-vermillion-bright);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- keyframes ---- */
+@keyframes kanzen-draw {
+  from {
+    stroke-dashoffset: var(--dash, 400);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes kanzen-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes kanzen-breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+@keyframes kanzen-aurora-drift {
+  0% {
+    background-position:
+      0% 50%,
+      100% 50%;
+  }
+  50% {
+    background-position:
+      100% 50%,
+      0% 50%;
+  }
+  100% {
+    background-position:
+      0% 50%,
+      100% 50%;
+  }
+}
+@keyframes kanzen-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes kanzen-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes kanzen-shimmer {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.animate-rise {
+  animation: kanzen-rise 0.6s var(--ease-out-quint) both;
+}
+
+.km-spinner {
+  display: inline-block;
+  border-radius: 999px;
+  border: 2px solid rgba(233, 236, 255, 0.25);
+  border-top-color: var(--color-vermillion);
+  animation: kanzen-orbit 0.7s linear infinite;
+}
+
+.glass {
+  background:
+    linear-gradient(160deg, rgba(27, 35, 71, 0.72), rgba(15, 22, 48, 0.62)), rgba(11, 16, 34, 0.4);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-panel);
+}
+
+.hairline-grid {
+  background-image:
+    linear-gradient(var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-hairline) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 75%);
+  opacity: 0.25;
+}
+
+.aurora-orb {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(94, 234, 212, 0.55), transparent 55%),
+    radial-gradient(circle at 70% 60%, rgba(167, 139, 250, 0.5), transparent 55%),
+    radial-gradient(circle at 50% 80%, rgba(226, 84, 47, 0.4), transparent 55%);
+  filter: blur(60px);
+  background-size: 180% 180%;
+  animation: kanzen-aurora-drift 18s ease-in-out infinite;
+}
+
+.aurora-text {
+  background: linear-gradient(
+    92deg,
+    var(--color-aurora-teal),
+    var(--color-aurora-violet),
+    var(--color-vermillion-bright)
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: kanzen-shimmer 8s linear infinite alternate;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-surface-2) 37%,
+    var(--color-surface) 63%
+  );
+  background-size: 400% 100%;
+  animation: kanzen-shimmer 1.4s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}

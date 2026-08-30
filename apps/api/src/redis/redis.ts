@@ -11,10 +11,9 @@ const baseOptions: RedisOptions = {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
   lazyConnect: isTest,
-  // Under test there is no Redis; fail fast instead of retrying forever.
   ...(isTest
     ? { retryStrategy: () => null, enableOfflineQueue: false, reconnectOnError: () => false }
-    : {}),
+    : { retryStrategy: (times: number) => Math.min(times * 400, 8000) }),
 };
 
 if (env.REDIS_URL.startsWith('rediss://')) {
@@ -25,7 +24,10 @@ let client: Redis | null = null;
 
 export function getRedis(): Redis {
   if (!client) {
-    client = new Redis(env.REDIS_URL, baseOptions);
+    // The shared client is used for cache and pub/sub only. A short command
+    // timeout means a missing Redis degrades gracefully rather than hanging a
+    // request. BullMQ connections below must not carry this.
+    client = new Redis(env.REDIS_URL, { ...baseOptions, commandTimeout: 2000 });
     client.on('error', (err) => logger.warn({ err: err.message }, 'redis error'));
     client.on('connect', () => logger.info('redis connected'));
   }

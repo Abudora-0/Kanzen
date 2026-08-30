@@ -8,7 +8,7 @@ export { CATALOG, CATALOG_BY_KEY } from './catalog.js';
 export type { CatalogItem } from './catalog.js';
 
 function unitTotal(item: CatalogItem): number {
-  if (item.type === 'movie') return 1;
+  if (item.type === 'movie' || item.format === 'Movie') return 1;
   if (item.type === 'book') return item.runtime ?? 300;
   if (item.type === 'anime') return item.episodes ?? 12;
   return item.chapters ?? 100;
@@ -90,10 +90,11 @@ export function demoLibrary(provider: ProviderId, seed: string): RawEntry[] {
     if (rng() > inclusion) continue;
 
     const total = unitTotal(item);
+    const single = item.type === 'movie' || item.format === 'Movie';
     const baseRatio = Math.min(1, Math.max(0, rng() * 1.15 - 0.05));
     const ratio = Math.min(1, baseRatio * drift + (provider === 'anilist' ? 0 : rng() * 0.06));
-    const progress = item.type === 'movie' ? (ratio >= 0.6 ? 1 : 0) : Math.round(ratio * total);
-    const realRatio = item.type === 'movie' ? progress : total > 0 ? progress / total : 0;
+    const progress = single ? (ratio >= 0.6 ? 1 : 0) : Math.round(ratio * total);
+    const realRatio = single ? progress : total > 0 ? progress / total : 0;
     const status = statusFromProgress(realRatio, rng);
     const rated = status === 'completed' || status === 'repeating' || rng() < 0.4;
     const score = rated

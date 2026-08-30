@@ -1,4 +1,4 @@
-import { type Model, type Schema, model, models } from 'mongoose';
+import mongoose, { type Model, type Schema } from 'mongoose';
 
 /**
  * Register a model once. Vitest runs the suite in a single process where model
@@ -7,5 +7,8 @@ import { type Model, type Schema, model, models } from 'mongoose';
  * explicitly by each caller so inference is not lost.
  */
 export function registerModel<T>(name: string, schema: Schema): Model<T> {
-  return (models[name] as Model<T> | undefined) ?? (model(name, schema) as unknown as Model<T>);
+  return (
+    (mongoose.models[name] as Model<T> | undefined) ??
+    (mongoose.model(name, schema) as unknown as Model<T>)
+  );
 }

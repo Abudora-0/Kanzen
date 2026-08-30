@@ -1,4 +1,4 @@
-import { CATALOG, CATALOG_BY_KEY } from '@kanzen/providers';
+import { CATALOG } from '@kanzen/providers';
 import { PROVIDER_IDS } from '@kanzen/shared';
 import { connectMongo, disconnectMongo } from './db/mongo.js';
 import { env } from './env.js';

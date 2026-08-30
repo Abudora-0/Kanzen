@@ -113,13 +113,17 @@ export async function linkRelations(raws: RawWork[]): Promise<void> {
     const linked: { relationType: string; work: unknown }[] = [];
     for (const rel of raw.relations) {
       const numeric = Number(rel.externalId);
-      const target = await Work.findOne({
-        $or: [
+      const or: FilterQuery<WorkDoc>[] = [];
+      if (Number.isFinite(numeric)) {
+        or.push(
           { 'externalIds.anilist': numeric },
           { 'externalIds.mal': numeric },
           { 'externalIds.tmdb': numeric },
-        ],
-      });
+        );
+      } else {
+        or.push({ 'externalIds.imdb': rel.externalId }, { displayTitle: rel.externalId });
+      }
+      const target = await Work.findOne({ $or: or });
       if (target && String(target._id) !== String(self._id)) {
         linked.push({ relationType: rel.relationType, work: target._id });
       }

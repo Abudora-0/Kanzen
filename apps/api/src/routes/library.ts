@@ -65,6 +65,63 @@ libraryRouter.get(
 );
 
 libraryRouter.get(
+  '/graph',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const userId = toObjectId(req.auth!.userId);
+    const match: Record<string, unknown> = { userId };
+    if (typeof req.query.type === 'string' && req.query.type) match.type = req.query.type;
+    if (typeof req.query.status === 'string' && req.query.status) match.status = req.query.status;
+
+    const rows = await Entry.aggregate<{
+      _id: unknown;
+      workId: unknown;
+      status: string;
+      progress: number;
+      score: number | null;
+      title: string;
+      type: string;
+      relations: { work: unknown }[];
+    }>([
+      { $match: match },
+      { $lookup: { from: 'works', localField: 'workId', foreignField: '_id', as: 'work' } },
+      { $unwind: '$work' },
+      {
+        $project: {
+          workId: 1,
+          status: 1,
+          progress: 1,
+          score: 1,
+          type: 1,
+          title: '$work.displayTitle',
+          relations: '$work.relations',
+        },
+      },
+    ]);
+
+    const idByWork = new Map(rows.map((r) => [String(r.workId), String(r._id)]));
+    const nodes = rows.map((r) => ({
+      id: String(r._id),
+      title: r.title,
+      type: r.type,
+      status: r.status,
+      progress: r.progress,
+      score: r.score ?? null,
+    }));
+    const links: { source: string; target: string; kind: string }[] = [];
+    for (const row of rows) {
+      for (const rel of row.relations ?? []) {
+        const target = idByWork.get(String(rel.work));
+        if (target && target !== String(row._id)) {
+          links.push({ source: String(row._id), target, kind: 'relation' });
+        }
+      }
+    }
+    res.json({ nodes, links });
+  }),
+);
+
+libraryRouter.get(
   '/stats',
   requireAuth,
   asyncHandler(async (req, res) => {

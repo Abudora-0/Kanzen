@@ -31,7 +31,6 @@ export const asyncHandler =
     fn(req, res, next).catch(next);
   };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorMiddleware(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (err instanceof ZodError) {
     return res.status(422).json({
