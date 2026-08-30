@@ -5,6 +5,7 @@ import { asyncHandler, forbidden } from '../http/errors.js';
 import { enqueueSync } from '../queue/queues.js';
 import { runSync } from '../sync/engine.js';
 import { refreshInsightSnapshot } from '../insights/compute.js';
+import { seedDatabase } from '../seed/seedDatabase.js';
 import { logger } from '../logger.js';
 
 export const cronRouter: Router = Router();
@@ -60,5 +61,20 @@ cronRouter.post(
     }
 
     res.json({ considered: due.length, queued, inline });
+  }),
+);
+
+/**
+ * Populate a fresh deployment with the demo library. Guarded by CRON_SECRET so
+ * it can be triggered once after the first deploy:
+ *   curl -X POST "https://<domain>/api/cron/seed?key=<CRON_SECRET>"
+ * Destructive: it resets the demo data. Not exposed in the UI.
+ */
+cronRouter.post(
+  '/seed',
+  asyncHandler(async (req, res) => {
+    authorize(req);
+    const result = await seedDatabase();
+    res.json({ ok: true, ...result });
   }),
 );
