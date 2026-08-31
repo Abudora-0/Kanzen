@@ -11,10 +11,13 @@ apps/api/dist/
 apps/worker/dist/
 packages/*/dist/
 
-# env
+# env and local secret notes
 .env
 .env.*
 !.env.example
+variables.txt
+secrets.txt
+*.secret
 
 # vercel
 .vercel/
