@@ -1,11 +1,14 @@
-# Render blueprint for the parts of Kanzen that Vercel cannot host: the BullMQ
-# worker (a long lived process) and, optionally, the API as a container service.
-# Import this file at https://dashboard.render.com/blueprints
+# Optional. The deployment works without any of this: when WORKER_ENABLED is
+# false (the default) the API runs syncs inline on Vercel and no worker is
+# needed. Deploy this only to move sync processing onto a dedicated queue
+# worker, and then set WORKER_ENABLED=true on the API. Render background workers
+# are a paid plan; Railway or Fly.io have free allowances.
+# Import at https://dashboard.render.com/blueprints
 services:
   - type: worker
     name: kanzen-worker
     runtime: node
-    plan: free
+    plan: starter
     region: oregon
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build:worker
     startCommand: node apps/worker/dist/index.js

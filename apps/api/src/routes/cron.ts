@@ -1,12 +1,9 @@
 import { Router, type Request } from 'express';
 import { env } from '../env.js';
-import { Connection, SyncRun } from '../models/index.js';
+import { Connection } from '../models/index.js';
 import { asyncHandler, forbidden } from '../http/errors.js';
-import { enqueueSync } from '../queue/queues.js';
-import { runSync } from '../sync/engine.js';
-import { refreshInsightSnapshot } from '../insights/compute.js';
+import { dispatchSync } from '../sync/dispatch.js';
 import { seedDatabase } from '../seed/seedDatabase.js';
-import { logger } from '../logger.js';
 
 export const cronRouter: Router = Router();
 
@@ -18,8 +15,8 @@ function authorize(req: Request): void {
 
 /**
  * Vercel Cron entry point. Picks connections that have not synced recently and
- * enqueues an incremental sync. When no queue worker is reachable it falls back
- * to running the sync inline so the deployed demo still refreshes.
+ * dispatches an incremental sync for each (queued when a worker is running,
+ * inline otherwise).
  */
 cronRouter.post(
   '/sync',
@@ -29,38 +26,12 @@ cronRouter.post(
     const due = await Connection.find({
       status: 'active',
       $or: [{ lastSyncedAt: null }, { lastSyncedAt: { $lt: cutoff } }],
-    }).limit(25);
+    }).limit(15);
 
-    let queued = 0;
-    let inline = 0;
     for (const conn of due) {
-      const run = await SyncRun.create({
-        userId: conn.userId,
-        connectionId: conn._id,
-        provider: conn.provider,
-        mode: 'incremental',
-        state: 'queued',
-      });
-      try {
-        await enqueueSync({
-          userId: String(conn.userId),
-          connectionId: String(conn._id),
-          provider: conn.provider,
-          mode: 'incremental',
-          syncRunId: String(run._id),
-        });
-        queued += 1;
-      } catch (err) {
-        logger.warn({ err: (err as Error).message }, 'cron falling back to inline sync');
-        await runSync({ connection: conn, mode: 'incremental', syncRunId: String(run._id) }).catch(
-          (e) => logger.error({ err: e.message }, 'inline sync failed'),
-        );
-        await refreshInsightSnapshot(String(conn.userId)).catch(() => undefined);
-        inline += 1;
-      }
+      await dispatchSync({ connection: conn, mode: 'incremental' });
     }
-
-    res.json({ considered: due.length, queued, inline });
+    res.json({ considered: due.length });
   }),
 );
 

@@ -34,6 +34,13 @@ const schema = z.object({
 
   /** Set by the worker process so queue consumers start. */
   ROLE: z.enum(['api', 'worker', 'all']).default('api'),
+
+  /**
+   * True when a dedicated BullMQ worker is running. When false (the default and
+   * the zero cost Vercel setup) the API runs syncs inline in the request and
+   * the queue is bypassed.
+   */
+  WORKER_ENABLED: bool(false),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -61,3 +68,4 @@ export const providerConfig = {
 };
 
 export const demoMode = env.PROVIDERS_DEMO_MODE;
+export const workerEnabled = env.WORKER_ENABLED || env.ROLE === 'all';

@@ -3,13 +3,13 @@ import { PROVIDERS, PROVIDER_IDS, type ProviderId } from '@kanzen/shared';
 import { createPkcePair, createState } from '@kanzen/providers';
 import { demoMode, env } from '../env.js';
 import { getRedis } from '../redis/redis.js';
-import { Connection, Entry, SyncRun, toObjectId } from '../models/index.js';
+import { Connection, Entry, toObjectId } from '../models/index.js';
 import { registry } from '../providers/context.js';
 import { encryptJson } from '../crypto/tokenCipher.js';
 import { requireAuth, blockDemoWrites } from '../auth/middleware.js';
 import { asyncHandler, badRequest, notFound } from '../http/errors.js';
 import { serializeConnection } from '../dto/serialize.js';
-import { enqueueSync } from '../queue/queues.js';
+import { dispatchSync } from '../sync/dispatch.js';
 import { logger } from '../logger.js';
 
 export const connectionsRouter: Router = Router();
@@ -73,21 +73,8 @@ connectionsRouter.post(
         },
         { upsert: true, new: true },
       );
-      const run = await SyncRun.create({
-        userId: req.auth!.userId,
-        connectionId: conn._id,
-        provider,
-        mode: 'full',
-        state: 'queued',
-      });
-      await enqueueSync({
-        userId: String(req.auth!.userId),
-        connectionId: String(conn._id),
-        provider,
-        mode: 'full',
-        syncRunId: String(run._id),
-      }).catch((err) => logger.warn({ err: err.message }, 'sync enqueue failed'));
-      return res.status(201).json({ connection: serializeConnection(conn, 0), queued: true });
+      await dispatchSync({ connection: conn, mode: 'full' });
+      return res.status(201).json({ connection: serializeConnection(conn, 0), synced: true });
     }
 
     if (!adapter.isConfigured()) {
@@ -117,7 +104,7 @@ connectionsRouter.get(
     assertProvider(provider);
     const code = String(req.query.code ?? req.query.request_token ?? '');
     const state = String(req.query.state ?? '');
-    const web = env.WEB_ORIGIN;
+    const web = env.WEB_ORIGIN.split(',')[0]!.trim();
 
     const rawState = state ? await getRedis().get(stateKey(state)) : null;
     // TMDB does not echo state, so fall back to the most recent pending state.
@@ -137,28 +124,22 @@ connectionsRouter.get(
       const userId = parsed?.userId;
       if (!userId) return res.redirect(`${web}/connections?error=oauth_state`);
 
-      const conn = await Connection.findOneAndUpdate(
+      await Connection.findOneAndUpdate(
         { userId, provider },
-        { $set: { encryptedTokens: encryptJson(tokens), handle, status: 'active', error: null } },
+        {
+          $set: {
+            encryptedTokens: encryptJson(tokens),
+            handle,
+            status: 'active',
+            error: null,
+            demo: false,
+          },
+        },
         { upsert: true, new: true },
       );
       if (state) await getRedis().del(stateKey(state));
 
-      const run = await SyncRun.create({
-        userId,
-        connectionId: conn._id,
-        provider,
-        mode: 'full',
-        state: 'queued',
-      });
-      await enqueueSync({
-        userId: String(userId),
-        connectionId: String(conn._id),
-        provider,
-        mode: 'full',
-        syncRunId: String(run._id),
-      }).catch(() => undefined);
-
+      // The Connections page kicks off the first sync so the redirect stays fast.
       res.redirect(`${web}/connections?connected=${provider}`);
     } catch (err) {
       logger.warn({ err: (err as Error).message, provider }, 'oauth callback failed');

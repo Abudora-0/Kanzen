@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
@@ -30,13 +30,20 @@ export function Connections() {
     },
   });
 
+  const handledConnect = useRef<string | null>(null);
   useEffect(() => {
-    if (params.get('connected') || params.get('error')) {
+    const connected = params.get('connected');
+    if (connected || params.get('error')) {
       qc.invalidateQueries({ queryKey: ['connections'] });
-      const t = setTimeout(() => setParams({}), 4000);
+      // kick off the first sync for a freshly connected platform, once
+      if (connected && handledConnect.current !== connected) {
+        handledConnect.current = connected;
+        sync.mutate(connected);
+      }
+      const t = setTimeout(() => setParams({}), 6000);
       return () => clearTimeout(t);
     }
-  }, [params, qc, setParams]);
+  }, [params, qc, setParams, sync]);
 
   if (isLoading || !data) return <div className="skeleton h-96 rounded-[18px]" />;
 

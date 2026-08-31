@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { syncRequestSchema } from '@kanzen/shared';
-import { Connection, SyncRun, toObjectId } from '../models/index.js';
+import { SyncRun, toObjectId } from '../models/index.js';
+import { Connection } from '../models/index.js';
 import { requireAuth, blockDemoWrites } from '../auth/middleware.js';
 import { asyncHandler, badRequest } from '../http/errors.js';
 import { serializeSyncRun } from '../dto/serialize.js';
-import { enqueueSync, getQueues } from '../queue/queues.js';
+import { getQueues } from '../queue/queues.js';
 import { allLimiterSnapshots } from '../ratelimit/limiter.js';
-import { logger } from '../logger.js';
+import { dispatchSync } from '../sync/dispatch.js';
 
 export const syncRouter: Router = Router();
 
@@ -23,21 +24,9 @@ syncRouter.post(
 
     const runs = [];
     for (const conn of connections) {
-      const run = await SyncRun.create({
-        userId: req.auth!.userId,
-        connectionId: conn._id,
-        provider: conn.provider,
-        mode: body.mode,
-        state: 'queued',
-      });
-      await enqueueSync({
-        userId: String(req.auth!.userId),
-        connectionId: String(conn._id),
-        provider: conn.provider,
-        mode: body.mode,
-        syncRunId: String(run._id),
-      }).catch((err) => logger.warn({ err: err.message }, 'sync enqueue failed'));
-      runs.push(serializeSyncRun(run));
+      const run = await dispatchSync({ connection: conn, mode: body.mode });
+      const fresh = (await SyncRun.findById(run._id)) ?? run;
+      runs.push(serializeSyncRun(fresh));
     }
     res.status(202).json({ runs });
   }),
