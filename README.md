@@ -251,22 +251,31 @@ Then open the site and choose **Explore the demo**.
 
 ### Turning on real syncs
 
-Set `PROVIDERS_DEMO_MODE=false` and add `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET`
-(register at [anilist.co/settings/developer](https://anilist.co/settings/developer) with redirect
-URI `https://<your-domain>/api/connections/anilist/callback`) and `TMDB_READ_TOKEN`. Real syncs need
-the worker, which Vercel cannot host.
+Add these environment variables on Vercel and redeploy:
 
-### The worker (optional)
+| Variable | Where to get it |
+| --- | --- |
+| `PROVIDERS_DEMO_MODE` | set to `false` |
+| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | create a client at [anilist.co/settings/developer](https://anilist.co/settings/developer), redirect URL `https://<your-domain>/api/connections/anilist/callback` |
+| `TMDB_READ_TOKEN` | the v4 Read Access Token from [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
+| `WEB_ORIGIN`, `API_PUBLIC_URL` | your deployment URL, needed for the OAuth redirect |
 
-Vercel has no long lived process, so the BullMQ worker runs elsewhere. Import
-[`render.yaml`](render.yaml) as a Render blueprint, or build the container:
+That is the whole setup. The API runs each sync inline in the request, so no
+separate worker is required. The seeded demo account keeps working on fixture
+data because its connections carry a per connection demo flag.
+
+### Moving sync onto a queue worker (optional, for scale)
+
+Big libraries can outrun a serverless function's time limit. To move sync
+processing onto the dedicated BullMQ worker, deploy it from
+[`render.yaml`](render.yaml) or the container, then set `WORKER_ENABLED=true` on
+the API. The worker needs the same `REDIS_URL` and `TOKEN_ENCRYPTION_KEY` as the
+API so it shares the queue and can decrypt stored tokens.
 
 ```bash
 docker build -f Dockerfile.worker -t kanzen-worker .
 docker run --env-file .env kanzen-worker
 ```
-
-Without it, the daily Vercel cron still refreshes the demo by running syncs inline.
 
 ## Tech
 
