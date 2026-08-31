@@ -45,9 +45,9 @@ statistics are partial. Kanzen is the layer above:
 | Counters, the continue list, and the sync pulse | Seven aggregation views | A force directed star map of your library |
 
 > The interface is dark cartographic: an aurora night sky crossed with the ink and vermillion of a
-> woodblock print. The logo is a self drawing enso that pulses while a sync runs. Scrollbars,
-> counters, dropdowns, toggles, and sliders are all themed, and everything respects
-> `prefers-reduced-motion`.
+> woodblock print. The logo is a vermillion torii gate that raises itself, and a light passes
+> through it while a sync runs. Scrollbars, counters, dropdowns, toggles, and sliders are all
+> themed, and everything respects `prefers-reduced-motion`.
 
 ## Architecture
 
@@ -113,7 +113,7 @@ sequenceDiagram
 
 ```
 apps/
-  web/       Vite + React + Tailwind v4 + Framer Motion + GSAP + d3-force
+  web/       Vite + React + Tailwind v4 + Framer Motion + d3-force
   api/       Express + Mongoose + BullMQ producer + zod  (also exports ./worker)
   worker/    thin entrypoint that runs the BullMQ consumers
 packages/
@@ -270,7 +270,7 @@ Without it, the daily Vercel cron still refreshes the demo by running syncs inli
 
 ## Tech
 
-- **Frontend** React 18, Vite 6, Tailwind CSS v4, Framer Motion, GSAP, d3-force, TanStack Query, Zustand
+- **Frontend** React 18, Vite 6, Tailwind CSS v4, Framer Motion, d3-force, TanStack Query, Zustand
 - **API** Express, Mongoose 8, zod, BullMQ, ioredis, Bottleneck, opossum, jsonwebtoken, bcryptjs, pino
 - **Data** MongoDB, Redis
 - **Tooling** pnpm workspaces, TypeScript project references, ESLint 9, Prettier, Husky, Vitest, Playwright

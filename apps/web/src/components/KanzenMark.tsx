@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { useState } from 'react';
 import { useMotionPref } from '../lib/store';
 import { cn } from '../lib/utils';
 
@@ -12,10 +11,11 @@ type Props = {
 };
 
 /**
- * The Kanzen mark: an enso brush stroke, an aurora orbit ring, and a travelling
- * sync node. The orbit turns continuously and speeds up during a sync; the
- * stroke can be replayed on hover. The resting state is always fully drawn so a
- * throttled frame loop never hides the logo.
+ * The Kanzen mark: a vermillion torii gate standing on an aurora ground line.
+ * It rises into place on mount, and a light passes through it while a background
+ * sync runs. The gate is always drawn complete; the entrance is a single CSS
+ * animation whose from-state is still a legible gate, so a dropped frame never
+ * leaves it half built.
  */
 export function KanzenMark({
   size = 44,
@@ -24,81 +24,55 @@ export function KanzenMark({
   className,
   replayOnHover = false,
 }: Props) {
-  const stroke = useRef<SVGPathElement>(null);
-  const orbit = useRef<SVGGElement>(null);
   const { reduceMotion } = useMotionPref();
-
-  useEffect(() => {
-    const g = orbit.current;
-    if (!g || reduceMotion) return;
-    const tween = gsap.to(g, {
-      rotate: 360,
-      duration: syncing ? 2.4 : 10,
-      ease: 'none',
-      repeat: -1,
-      transformOrigin: '50% 50%',
-    });
-    return () => {
-      tween.kill();
-      gsap.set(g, { rotate: 0 });
-    };
-  }, [syncing, reduceMotion]);
-
-  const replay = () => {
-    const path = stroke.current;
-    if (reduceMotion || !path) return;
-    const length = path.getTotalLength();
-    path.style.strokeDasharray = `${length}`;
-    gsap.fromTo(
-      path,
-      { strokeDashoffset: length },
-      {
-        strokeDashoffset: 0,
-        duration: 1.1,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          path.style.strokeDasharray = 'none';
-        },
-      },
-    );
-  };
+  const [replayKey, setReplayKey] = useState(0);
 
   const mark = (
     <svg
       viewBox="0 0 64 64"
       width={size}
       height={size}
-      className={cn('shrink-0', className)}
+      className={cn('shrink-0 overflow-visible', className)}
       role="img"
       aria-label="Kanzen"
-      onMouseEnter={replayOnHover ? replay : undefined}
+      onMouseEnter={replayOnHover && !reduceMotion ? () => setReplayKey((k) => k + 1) : undefined}
     >
-      <g ref={orbit} style={{ transformOrigin: '50% 50%' }}>
-        <circle
-          cx="32"
-          cy="32"
-          r="27"
-          fill="none"
-          stroke="var(--color-aurora-teal)"
-          strokeWidth="1"
-          opacity="0.4"
-        />
-        <circle cx="59" cy="32" r="3" fill="var(--color-aurora-violet)" />
-      </g>
-      <path
-        ref={stroke}
-        d="M46 18 A20 20 0 1 1 25 13"
-        fill="none"
-        stroke="var(--color-vermillion)"
-        strokeWidth="6.5"
+      <line
+        x1="12"
+        y1="56.5"
+        x2="52"
+        y2="56.5"
+        stroke="var(--color-aurora-teal)"
+        strokeWidth="1.5"
         strokeLinecap="round"
-        style={
-          syncing && !reduceMotion
-            ? { animation: 'kanzen-breathe 1.6s ease-in-out infinite' }
-            : undefined
-        }
+        opacity="0.55"
       />
-      <circle cx="32" cy="32" r="3.4" fill="var(--color-ink)" />
+
+      <g key={replayKey} className={reduceMotion ? undefined : 'kanzen-gate-rise'}>
+        {/* columns */}
+        <rect x="17.5" y="16" width="5" height="40" rx="1" fill="var(--color-vermillion)" />
+        <rect x="41.5" y="16" width="5" height="40" rx="1" fill="var(--color-vermillion)" />
+        {/* nuki: the tie beam through the columns */}
+        <rect x="13" y="24" width="38" height="4" rx="1" fill="var(--color-vermillion-deep)" />
+        {/* gakuzuka: centre strut */}
+        <rect x="31" y="15" width="2" height="10" fill="var(--color-vermillion)" />
+        {/* kasagi: the crowning lintel with a shallow upward bow */}
+        <path d="M5 15 Q32 8 59 15 L59 10.5 Q32 3.5 5 10.5 Z" fill="var(--color-vermillion)" />
+      </g>
+
+      {/* a light passing through the gate while a sync runs */}
+      {syncing && !reduceMotion ? (
+        <circle r="2.6" fill="var(--color-aurora-violet)">
+          <animateMotion dur="1.9s" repeatCount="indefinite" path="M2 20 H62" />
+          <animate
+            attributeName="opacity"
+            values="0;1;1;0"
+            keyTimes="0;0.15;0.85;1"
+            dur="1.9s"
+            repeatCount="indefinite"
+          />
+        </circle>
+      ) : null}
     </svg>
   );
 

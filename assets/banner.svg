@@ -29,19 +29,32 @@
     <circle cx="900" cy="220" r="1.4" opacity="0.7" />
   </g>
 
-  <!-- enso mark -->
-  <g transform="translate(150 140)">
-    <circle r="58" fill="none" stroke="#5eead4" stroke-width="1.4" opacity="0.45">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite" />
+  <!-- torii mark, raising itself on a loop -->
+  <g transform="translate(90 60)">
+    <line x1="10" y1="150" x2="110" y2="150" stroke="#5eead4" stroke-width="4" stroke-linecap="round" opacity="0.55" />
+    <g fill="#e2542f">
+      <rect x="26" width="14" rx="3">
+        <animate attributeName="y" values="150;150;28;28;150" keyTimes="0;0.05;0.32;0.9;1" dur="6s" repeatCount="indefinite" />
+        <animate attributeName="height" values="0;0;122;122;0" keyTimes="0;0.05;0.32;0.9;1" dur="6s" repeatCount="indefinite" />
+      </rect>
+      <rect x="80" width="14" rx="3">
+        <animate attributeName="y" values="150;150;28;28;150" keyTimes="0;0.08;0.35;0.9;1" dur="6s" repeatCount="indefinite" />
+        <animate attributeName="height" values="0;0;122;122;0" keyTimes="0;0.08;0.35;0.9;1" dur="6s" repeatCount="indefinite" />
+      </rect>
+      <rect x="57" y="22" width="6" height="30" opacity="0">
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.5;0.6;0.9;1" dur="6s" repeatCount="indefinite" />
+      </rect>
+      <path d="M0 26 Q60 6 120 26 L120 12 Q60 -8 0 12 Z" opacity="0">
+        <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.34;0.44;0.9;1" dur="6s" repeatCount="indefinite" />
+      </path>
+    </g>
+    <rect x="12" y="48" width="96" height="12" rx="3" fill="#a5371b" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.42;0.52;0.9;1" dur="6s" repeatCount="indefinite" />
+    </rect>
+    <circle r="5" fill="#a78bfa">
+      <animateMotion dur="6s" begin="2s" repeatCount="indefinite" path="M-14 40 H134" />
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.33;0.4;0.55;0.62;1" dur="6s" repeatCount="indefinite" />
     </circle>
-    <circle cx="58" cy="0" r="5" fill="#a78bfa">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite" />
-    </circle>
-    <path d="M42 -26 A46 46 0 1 1 -14 -42" fill="none" stroke="#e2542f" stroke-width="13" stroke-linecap="round"
-          stroke-dasharray="300" stroke-dashoffset="300">
-      <animate attributeName="stroke-dashoffset" values="300;0;0;300" keyTimes="0;0.45;0.9;1" dur="6s" repeatCount="indefinite" />
-    </path>
-    <circle r="6" fill="#e9ecff" />
   </g>
 
   <!-- wordmark -->

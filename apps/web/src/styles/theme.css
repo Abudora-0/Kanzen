@@ -193,6 +193,23 @@ h3,
   animation: kanzen-orbit 0.7s linear infinite;
 }
 
+/* The torii mark rises through the ground line on mount. The from-state is a
+   dimmer, lower gate so a skipped frame never leaves it broken. */
+@keyframes kanzen-gate-rise {
+  from {
+    opacity: 0.55;
+    transform: translateY(7px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.kanzen-gate-rise {
+  animation: kanzen-gate-rise 0.7s var(--ease-out-quint) both;
+  transform-origin: 50% 100%;
+}
+
 .glass {
   background:
     linear-gradient(160deg, rgba(27, 35, 71, 0.72), rgba(15, 22, 48, 0.62)), rgba(11, 16, 34, 0.4);
