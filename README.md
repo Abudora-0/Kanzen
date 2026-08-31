@@ -199,8 +199,8 @@ Full list with notes is in [`.env.example`](.env.example).
 ## Deploying to Vercel
 
 [`vercel.json`](vercel.json) builds `apps/web`, serves the SPA, and routes `/api/*` to the Express
-app in [`api/[...path].ts`](api/%5B...path%5D.ts). A cron hits `/api/cron/sync` every six hours and
-runs an incremental sync inline when no worker is reachable.
+app in [`api/[...path].ts`](api/%5B...path%5D.ts). A daily cron hits `/api/cron/sync` and runs an
+incremental sync inline when no worker is reachable.
 
 ### 1. Provision data services
 
@@ -266,7 +266,7 @@ docker build -f Dockerfile.worker -t kanzen-worker .
 docker run --env-file .env kanzen-worker
 ```
 
-Without it, the six hour Vercel cron still refreshes the demo by running syncs inline.
+Without it, the daily Vercel cron still refreshes the demo by running syncs inline.
 
 ## Tech
 
