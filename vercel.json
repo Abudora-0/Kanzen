@@ -5,13 +5,16 @@
   "buildCommand": "pnpm run build:web && pnpm run build:api",
   "outputDirectory": "apps/web/dist",
   "functions": {
-    "api/[...path].ts": {
+    "api/index.ts": {
       "maxDuration": 60,
       "memory": 1024
     }
   },
   "crons": [{ "path": "/api/cron/sync", "schedule": "0 6 * * *" }],
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

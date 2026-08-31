@@ -119,7 +119,7 @@ apps/
 packages/
   shared/    domain types, zod schemas, status mapping tables
   providers/ MediaProvider adapter interface + AniList, TMDB, MAL, Kitsu + fixtures
-api/[...path].ts   Vercel serverless entry that wraps the Express app
+api/index.ts       Vercel serverless entry that wraps the Express app
 ```
 
 ## Aggregation highlights
@@ -199,7 +199,7 @@ Full list with notes is in [`.env.example`](.env.example).
 ## Deploying to Vercel
 
 [`vercel.json`](vercel.json) builds `apps/web`, serves the SPA, and routes `/api/*` to the Express
-app in [`api/[...path].ts`](api/%5B...path%5D.ts). A daily cron hits `/api/cron/sync` and runs an
+app in [`api/index.ts`](api/index.ts). A daily cron hits `/api/cron/sync` and runs an
 incremental sync inline when no worker is reachable.
 
 ### 1. Provision data services
