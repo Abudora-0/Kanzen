@@ -121,7 +121,7 @@ async function processInsights(job: Job<InsightsJob>) {
 async function processTokenRefresh(_job: Job<TokenRefreshJob>) {
   if (demoMode) return { skipped: 'demo' };
   const soon = Date.now() + 1000 * 60 * 60;
-  const connections = await Connection.find({ status: 'active' });
+  const connections = await Connection.find({ status: 'active', demo: { $ne: true } });
   let refreshed = 0;
   for (const connection of connections) {
     const tokens = decryptTokens(connection);

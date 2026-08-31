@@ -26,13 +26,17 @@ export function buildSyncContext(
       ? new Date(connection.lastSyncedAt.getTime() - 1000 * 60 * 60 * 24)
       : null;
 
+  // A connection can be demo even when the deployment is not: the seeded demo
+  // account keeps working on fixtures after real OAuth is switched on.
+  const isDemo = demoMode || Boolean(connection.get('demo'));
+
   return {
     userId: String(connection.userId),
     connectionId: String(connection._id),
     handle: connection.handle,
-    tokens: demoMode ? { accessToken: 'demo' } : decryptTokens(connection),
+    tokens: isDemo ? { accessToken: 'demo' } : decryptTokens(connection),
     since,
-    demo: demoMode,
+    demo: isDemo,
     log: (message, meta) => logger.debug({ provider: connection.provider, ...meta }, message),
   };
 }

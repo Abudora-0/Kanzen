@@ -20,6 +20,8 @@ const connectionSchema = new Schema(
     /** Opaque provider pagination cursor for incremental sync. */
     cursor: { type: String, default: null },
     error: { type: String, default: null },
+    /** Fixture backed connection, kept working after real OAuth is switched on. */
+    demo: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

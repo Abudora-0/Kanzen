@@ -102,6 +102,7 @@ export async function seedDatabase(): Promise<SeedResult> {
       handle: `${provider}-demo`,
       encryptedTokens: encryptJson({ accessToken: 'demo' }),
       status: 'active',
+      demo: true,
     });
     const run = await SyncRun.create({
       userId: user._id,

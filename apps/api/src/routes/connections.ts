@@ -68,6 +68,7 @@ connectionsRouter.post(
             handle: `${PROVIDERS[provider].name.toLowerCase()}-demo`,
             status: 'active',
             error: null,
+            demo: true,
           },
         },
         { upsert: true, new: true },
