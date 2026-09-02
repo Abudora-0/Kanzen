@@ -335,6 +335,15 @@ h3,
   pointer-events: none;
 }
 
+.footer-link {
+  color: var(--color-ink-muted);
+  transition: color 0.18s ease;
+  width: fit-content;
+}
+.footer-link:hover {
+  color: var(--color-ink);
+}
+
 .wordmark {
   font-family: var(--font-wordmark);
   font-weight: 700;
@@ -353,6 +362,18 @@ h3,
   background-size: 40px 40px;
   mask-image: radial-gradient(circle at 50% 0%, black, transparent 75%);
   opacity: 0.25;
+}
+
+.starfield {
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(199, 210, 254, 0.7), transparent),
+    radial-gradient(1px 1px at 68% 12%, rgba(199, 210, 254, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 40% 70%, rgba(199, 210, 254, 0.6), transparent),
+    radial-gradient(1px 1px at 85% 55%, rgba(199, 210, 254, 0.55), transparent),
+    radial-gradient(1px 1px at 12% 85%, rgba(199, 210, 254, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 55% 40%, rgba(94, 234, 212, 0.5), transparent);
+  background-repeat: no-repeat;
+  animation: kanzen-breathe 7s ease-in-out infinite;
 }
 
 .aurora-orb {

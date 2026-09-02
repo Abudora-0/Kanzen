@@ -102,7 +102,7 @@ export function Connections() {
                 {item.meta.rateLimit.requestsPerMinute} req/min · burst {item.meta.rateLimit.burst}
               </p>
 
-              <div className="mt-4 flex items-center justify-between">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
                 {conn ? (
                   <span className="text-sm text-ink-soft">
                     {conn.handle ?? 'connected'} · {conn.entryCount} entries

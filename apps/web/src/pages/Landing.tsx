@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { KanzenMark } from '../components/KanzenMark';
+import { Footer } from '../components/Footer';
+import { useInViewReveal } from '../lib/motion';
 import { useAuth } from '../lib/store';
 
 const FEATURES = [
@@ -90,27 +92,30 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto grid max-w-5xl gap-4 px-5 pb-24 sm:grid-cols-2">
-        {FEATURES.map((f) => (
-          <article key={f.title} className="glass p-6 transition hover:border-hairline-bright">
-            <span
-              className="mb-3 block h-1 w-10 rounded-full"
-              style={{ background: TONE[f.tone] }}
-            />
-            <h3 className="mb-2 font-display text-lg text-ink">{f.title}</h3>
-            <p className="text-sm text-ink-muted">{f.body}</p>
-          </article>
+      <section className="relative z-10 mx-auto grid max-w-5xl gap-4 px-5 pb-20 sm:grid-cols-2">
+        {FEATURES.map((f, i) => (
+          <FeatureCard key={f.title} f={f} delay={i * 90} />
         ))}
       </section>
 
-      <section className="relative z-10 mx-auto max-w-3xl px-5 pb-28 text-center">
-        <p className="font-display text-2xl text-ink-soft">
-          完全 · kanzen · <span className="text-ink">complete</span>
-        </p>
-        <p className="mt-3 text-sm text-ink-faint">
-          Built with React, Express, MongoDB aggregation, BullMQ, and Redis.
-        </p>
-      </section>
+      <Footer />
+    </div>
+  );
+}
+
+function FeatureCard({
+  f,
+  delay,
+}: {
+  f: { title: string; body: string; tone: string };
+  delay: number;
+}) {
+  const reveal = useInViewReveal<HTMLDivElement>(delay);
+  return (
+    <div ref={reveal.ref} className={`glass glass-hover p-6 ${reveal.className}`}>
+      <span className="mb-3 block h-1 w-10 rounded-full" style={{ background: TONE[f.tone] }} />
+      <h3 className="mb-2 font-display text-lg text-ink">{f.title}</h3>
+      <p className="text-sm text-ink-muted">{f.body}</p>
     </div>
   );
 }

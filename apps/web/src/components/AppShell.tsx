@@ -1,17 +1,20 @@
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../lib/store';
 import { useSyncStream } from '../lib/stream';
 import { KanzenMark } from './KanzenMark';
+import { Footer } from './Footer';
 import { PageTransition } from './PageTransition';
+import { Icon } from './Icon';
 import { cn } from '../lib/utils';
 
 const NAV = [
-  { to: '/dashboard', label: 'Deck' },
-  { to: '/library', label: 'Library' },
-  { to: '/insights', label: 'Insights' },
-  { to: '/connections', label: 'Connections' },
-];
+  { to: '/dashboard', label: 'Deck', icon: 'deck' },
+  { to: '/library', label: 'Library', icon: 'library' },
+  { to: '/insights', label: 'Insights', icon: 'insights' },
+  { to: '/connections', label: 'Connections', icon: 'connections' },
+] as const;
 
 export function AppShell() {
   const { user, logout } = useAuth();
@@ -19,21 +22,25 @@ export function AppShell() {
   const location = useLocation();
   const pulse = useSyncStream(Boolean(user));
   const routeKey = location.pathname.split('/').slice(0, 3).join('/');
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => setMenuOpen(false), [location.pathname]);
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh pb-16 md:pb-0">
       <div className="hairline-grid pointer-events-none fixed inset-0 -z-10" />
-      <header className="sticky top-0 z-30 border-b border-hairline bg-night/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
+
+      <header className="sticky top-0 z-30 border-b border-hairline bg-night/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
           <button
             onClick={() => navigate('/dashboard')}
             className="flex items-center"
             aria-label="Kanzen home"
           >
-            <KanzenMark variant="full" size={28} syncing={pulse.active} />
+            <KanzenMark variant="full" size={26} syncing={pulse.active} />
           </button>
 
-          <nav className="flex items-center gap-1">
+          <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => (
               <NavLink
                 key={item.to}
@@ -62,10 +69,15 @@ export function AppShell() {
           </nav>
 
           <div className="flex items-center gap-3">
+            {pulse.active ? (
+              <span className="hidden items-center gap-1.5 rounded-full border border-aurora-teal/40 bg-aurora-teal/10 px-2 py-0.5 text-[0.7rem] text-aurora-teal sm:inline-flex">
+                <span className="km-spinner h-2.5 w-2.5" aria-hidden />
+                syncing
+              </span>
+            ) : null}
             <NavLink
               to="/settings"
-              className="text-sm text-ink-muted transition hover:text-ink"
-              aria-label="Settings"
+              className="hidden text-sm text-ink-muted transition hover:text-ink md:block"
             >
               {user?.displayName?.split(' ')[0] ?? 'You'}
             </NavLink>
@@ -74,9 +86,16 @@ export function AppShell() {
                 await logout();
                 navigate('/');
               }}
-              className="text-xs text-ink-faint transition hover:text-vermillion"
+              className="hidden text-xs text-ink-faint transition hover:text-vermillion md:block"
             >
               sign out
+            </button>
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Menu"
+              className="grid h-9 w-9 place-items-center rounded-md border border-hairline text-ink-soft md:hidden"
+            >
+              <Icon name={menuOpen ? 'x' : 'menu'} size={18} />
             </button>
           </div>
         </div>
@@ -91,15 +110,76 @@ export function AppShell() {
         ) : null}
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-7 sm:px-5 sm:py-9">
+      {/* mobile slide-over */}
+      <AnimatePresence>
+        {menuOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-void/60 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+              className="absolute right-0 top-0 h-full w-64 border-l border-hairline bg-night-2 p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-sm text-ink">{user?.displayName}</p>
+              <p className="mb-5 text-xs text-ink-faint">
+                {user?.isDemo ? 'demo workspace' : user?.email}
+              </p>
+              <NavLink
+                to="/settings"
+                className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-ink-soft hover:bg-surface"
+              >
+                <Icon name="settings" size={16} /> Settings
+              </NavLink>
+              <button
+                onClick={async () => {
+                  await logout();
+                  navigate('/');
+                }}
+                className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-ink-muted hover:bg-surface"
+              >
+                <Icon name="external-link" size={16} /> Sign out
+              </button>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-9">
         <PageTransition id={routeKey}>
           <Outlet context={pulse} />
         </PageTransition>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-5 py-10 text-center text-xs text-ink-faint">
-        Kanzen · unified media tracker · {user?.isDemo ? 'demo workspace' : 'your workspace'}
-      </footer>
+      <Footer workspace={user?.isDemo ? 'demo workspace' : 'your workspace'} />
+
+      {/* mobile bottom tab bar */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-night/95 backdrop-blur-md md:hidden">
+        <div className="mx-auto flex max-w-md items-stretch justify-around">
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  'flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.65rem] transition-colors',
+                  isActive ? 'text-vermillion' : 'text-ink-muted',
+                )
+              }
+            >
+              <Icon name={item.icon} size={19} />
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }
