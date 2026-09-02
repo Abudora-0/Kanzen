@@ -49,10 +49,7 @@ export function Landing() {
       <div className="hairline-grid pointer-events-none absolute inset-0" />
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-6">
-        <div className="flex items-center gap-2.5">
-          <KanzenMark size={30} replayOnHover />
-          <span className="font-display text-sm tracking-[0.34em]">KANZEN</span>
-        </div>
+        <KanzenMark variant="full" size={30} replayOnHover />
         <Link
           to={user ? '/dashboard' : '/enter'}
           className="rounded-[10px] border border-hairline-bright px-4 py-1.5 text-sm text-ink transition hover:border-vermillion"

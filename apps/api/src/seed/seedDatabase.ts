@@ -15,6 +15,7 @@ import { hashPassword } from '../auth/password.js';
 import { encryptJson } from '../crypto/tokenCipher.js';
 import { runSync } from '../sync/engine.js';
 import { refreshInsightSnapshot } from '../insights/compute.js';
+import { enrichCovers } from './enrichCovers.js';
 
 function displayTitle(item: (typeof CATALOG)[number]): string {
   return item.title.english ?? item.title.romaji ?? item.title.native ?? item.key;
@@ -93,6 +94,9 @@ export async function seedDatabase(): Promise<SeedResult> {
   ]);
 
   await seedCatalogue();
+  await enrichCovers().catch((err) =>
+    logger.warn({ err: (err as Error).message }, 'cover enrichment failed, continuing'),
+  );
   const user = await seedDemoUser();
 
   for (const provider of PROVIDER_IDS) {

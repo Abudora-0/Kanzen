@@ -1,8 +1,9 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../lib/store';
 import { useSyncStream } from '../lib/stream';
 import { KanzenMark } from './KanzenMark';
+import { PageTransition } from './PageTransition';
 import { cn } from '../lib/utils';
 
 const NAV = [
@@ -15,7 +16,9 @@ const NAV = [
 export function AppShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const pulse = useSyncStream(Boolean(user));
+  const routeKey = location.pathname.split('/').slice(0, 3).join('/');
 
   return (
     <div className="min-h-dvh">
@@ -24,11 +27,10 @@ export function AppShell() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2.5"
+            className="flex items-center"
             aria-label="Kanzen home"
           >
-            <KanzenMark size={30} syncing={pulse.active} />
-            <span className="font-display text-sm tracking-[0.32em] text-ink">KANZEN</span>
+            <KanzenMark variant="full" size={28} syncing={pulse.active} />
           </button>
 
           <nav className="flex items-center gap-1">
@@ -89,8 +91,10 @@ export function AppShell() {
         ) : null}
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 py-8">
-        <Outlet context={pulse} />
+      <main className="mx-auto max-w-6xl px-4 py-7 sm:px-5 sm:py-9">
+        <PageTransition id={routeKey}>
+          <Outlet context={pulse} />
+        </PageTransition>
       </main>
 
       <footer className="mx-auto max-w-6xl px-5 py-10 text-center text-xs text-ink-faint">

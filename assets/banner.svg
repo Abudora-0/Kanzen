@@ -58,8 +58,8 @@
   </g>
 
   <!-- wordmark -->
-  <text x="270" y="150" font-family="Georgia, 'Times New Roman', serif" font-size="76" letter-spacing="14" fill="url(#ink)">KANZEN</text>
-  <text x="272" y="196" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="6" fill="#7f8bbd">UNIFIED MEDIA AND CROSS-PLATFORM TRACKER</text>
+  <text x="272" y="150" font-family="'Zen Kaku Gothic New', 'Trebuchet MS', 'Segoe UI', sans-serif" font-weight="700" font-size="68" letter-spacing="18" fill="url(#ink)">KANZEN</text>
+  <text x="274" y="192" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="6" fill="#7f8bbd">UNIFIED MEDIA AND CROSS-PLATFORM TRACKER</text>
 
   <!-- constellation flourish -->
   <g stroke="#3b4a86" stroke-width="1" fill="none">

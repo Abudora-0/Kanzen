@@ -9,13 +9,18 @@ import { Counter } from '../components/ui/Counter';
 import { Button, Panel, SectionTitle } from '../components/ui/primitives';
 import { SyncPulse } from '../components/SyncPulse';
 import { Constellation } from '../components/Constellation';
+import { CoverImage } from '../components/CoverImage';
+import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 import { useConstellationData } from '../lib/constellation';
+import { useToast } from '../lib/toast';
 import { relativeTime, titleOf } from '../lib/utils';
 
 export function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
   const pulse = useOutletContext<SyncPulseState>();
 
   const stats = useQuery({ queryKey: ['library-stats'], queryFn: api.libraryStats });
@@ -33,9 +38,15 @@ export function Dashboard() {
   const bump = useMutation({
     mutationFn: (entry: EntryDto) =>
       api.updateEntry(entry.id, { progress: entry.progress + 1, status: 'current' }),
-    onSuccess: () => {
+    onSuccess: (res, entry) => {
+      toast.show(
+        res.entry.status === 'completed'
+          ? `Finished ${titleOf(entry.work)}`
+          : `+1 on ${titleOf(entry.work)}`,
+      );
       qc.invalidateQueries({ queryKey: ['library'] });
       qc.invalidateQueries({ queryKey: ['library-stats'] });
+      qc.invalidateQueries({ queryKey: ['insights'] });
     },
   });
 
@@ -73,35 +84,43 @@ export function Dashboard() {
           {inProgress.isLoading ? (
             <SkeletonRows />
           ) : (inProgress.data?.items.length ?? 0) === 0 ? (
-            <p className="text-sm text-ink-muted">
-              Nothing in progress.{' '}
-              <Link className="text-vermillion" to="/library">
-                Open the library
-              </Link>
-              .
-            </p>
+            <EmptyState
+              className="border-0 bg-transparent py-8"
+              title="Nothing in progress"
+              body="Start something from the library, or sync a platform."
+              action={{ label: 'Open the library', to: '/library' }}
+            />
           ) : (
-            <ul className="divide-y divide-hairline">
+            <ul className="-my-1.5 divide-y divide-hairline">
               {inProgress.data!.items.slice(0, 6).map((entry) => (
-                <li key={entry.id} className="flex items-center gap-3 py-2.5">
+                <li key={entry.id} className="flex items-center gap-3 py-2">
                   <button
-                    className="min-w-0 flex-1 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     onClick={() => navigate(`/library/${entry.id}`)}
                   >
-                    <p className="truncate text-sm text-ink">{titleOf(entry.work)}</p>
-                    <p className="tabular text-xs text-ink-muted">
-                      {entry.progress}
-                      {entry.progressMax ? ` / ${entry.progressMax}` : ''}{' '}
-                      {PROGRESS_UNIT[entry.work.type]}
-                      {entry.hasConflict ? ' · conflict' : ''}
-                    </p>
+                    <CoverImage
+                      src={entry.work.coverImage}
+                      alt={titleOf(entry.work)}
+                      type={entry.work.type}
+                      className="h-12 w-9 shrink-0"
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm text-ink">{titleOf(entry.work)}</span>
+                      <span className="tabular block text-xs text-ink-muted">
+                        {entry.progress}
+                        {entry.progressMax ? ` / ${entry.progressMax}` : ''}{' '}
+                        {PROGRESS_UNIT[entry.work.type]}
+                        {entry.hasConflict ? ' · conflict' : ''}
+                      </span>
+                    </span>
                   </button>
                   <button
-                    className="rounded-md border border-hairline-bright px-2 py-1 text-xs text-ink transition hover:border-vermillion"
+                    aria-label="Log one more"
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-hairline-bright text-ink transition hover:border-vermillion disabled:opacity-50"
                     onClick={() => bump.mutate(entry)}
                     disabled={bump.isPending}
                   >
-                    +1
+                    <Icon name="plus" size={15} />
                   </button>
                 </li>
               ))}
