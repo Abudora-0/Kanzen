@@ -1,4 +1,5 @@
 import type { ConnectionDto, EntryDto, SyncRunDto, UserDto, WorkDto } from '@kanzen/shared';
+import { coerceAccent } from '@kanzen/shared';
 import type { ConnectionDoc, EntryDoc, SyncRunDoc, UserDoc, WorkDoc } from '../models/index.js';
 
 const iso = (d: Date | null | undefined): string | null => (d ? new Date(d).toISOString() : null);
@@ -13,7 +14,7 @@ export function serializeUser(user: UserDoc): UserDto {
       reduceMotion: Boolean(user.settings?.reduceMotion),
       soundFx: Boolean(user.settings?.soundFx),
       customCursor: Boolean(user.settings?.customCursor),
-      accent: (user.settings?.accent ?? 'vermillion') as UserDto['settings']['accent'],
+      accent: coerceAccent(user.settings?.accent),
     },
     createdAt: iso(user.get('createdAt')) ?? new Date().toISOString(),
   };

@@ -63,10 +63,13 @@ export function Connections() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[0.7rem] uppercase tracking-[0.3em] text-vermillion">connections</p>
-          <h1 className="font-display text-3xl text-ink">Platforms</h1>
+          <p className="text-[0.7rem] uppercase tracking-[0.3em] text-vermillion">trackers</p>
+          <h1 className="font-display text-3xl text-ink">Your trackers</h1>
+          <p className="mt-1 max-w-md text-sm text-ink-muted">
+            Connect the accounts you track on elsewhere. Kanzen keeps them in one library.
+          </p>
           {data.demoMode ? (
-            <p className="mt-1 text-xs text-aurora-teal">
+            <p className="mt-1 text-xs text-sage">
               demo mode: providers serve fixture data, no real OAuth needed
             </p>
           ) : null}

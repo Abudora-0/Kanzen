@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { settingsSchema } from '@kanzen/shared';
+import { settingsSchema, coerceAccent } from '@kanzen/shared';
 import { User } from '../models/index.js';
 import { requireAuth, blockDemoWrites } from '../auth/middleware.js';
 import { asyncHandler, notFound } from '../http/errors.js';
@@ -19,7 +19,7 @@ settingsRouter.patch(
       reduceMotion: patch.reduceMotion ?? user.settings?.reduceMotion ?? false,
       soundFx: patch.soundFx ?? user.settings?.soundFx ?? false,
       customCursor: patch.customCursor ?? user.settings?.customCursor ?? false,
-      accent: patch.accent ?? user.settings?.accent ?? 'vermillion',
+      accent: patch.accent ?? coerceAccent(user.settings?.accent),
     };
     await user.save();
     res.json({ user: serializeUser(user) });

@@ -2,6 +2,7 @@ export * from './media.js';
 export * from './status.js';
 export * from './providers.js';
 export * from './insights.js';
+export * from './theme.js';
 export * from './schemas.js';
 export * from './dto.js';
 

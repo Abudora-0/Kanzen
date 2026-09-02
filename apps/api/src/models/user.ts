@@ -6,7 +6,7 @@ const settingsSchema = new Schema(
     reduceMotion: { type: Boolean, default: false },
     soundFx: { type: Boolean, default: false },
     customCursor: { type: Boolean, default: false },
-    accent: { type: String, enum: ['vermillion', 'aurora', 'gold'], default: 'vermillion' },
+    accent: { type: String, enum: ['rust', 'sage', 'gold'], default: 'rust' },
   },
   { _id: false },
 );

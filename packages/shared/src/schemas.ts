@@ -49,7 +49,7 @@ export const settingsSchema = z.object({
   reduceMotion: z.boolean().optional(),
   soundFx: z.boolean().optional(),
   customCursor: z.boolean().optional(),
-  accent: z.enum(['vermillion', 'aurora', 'gold']).optional(),
+  accent: z.enum(['rust', 'sage', 'gold']).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

@@ -106,9 +106,8 @@
 }
 
 /* Accent theming: the Settings choice swaps the rust role tokens, which every
-   bg-vermillion / text-vermillion utility reads from. Selector names track the
-   stored enum ('aurora' and 'gold' until the Phase 4 rename to 'sage'). */
-:root[data-accent='aurora'],
+   bg-vermillion / text-vermillion utility reads from. 'rust' is the default and
+   carries no attribute. */
 :root[data-accent='sage'] {
   --color-vermillion: #5e8a63;
   --color-vermillion-bright: #7ba97f;

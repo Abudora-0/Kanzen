@@ -4,16 +4,16 @@
 
 # Kanzen
 
-**Unified media and cross-platform tracker dashboard for anime, manga, books, and movies.**
+**Every media tracker you use, in one place. Anime, manga, books, and movies.**
 
 Connect AniList, MyAnimeList, Kitsu, and TMDB. Kanzen folds every list into one canonical
 library, reconciles the differences, and turns the whole thing into a living chart of your taste.
 
 [![CI](https://github.com/Abudora-0/Kanzen/actions/workflows/ci.yml/badge.svg)](https://github.com/Abudora-0/Kanzen/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-e2542f.svg)](./LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20.11-5eead4.svg)](.nvmrc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-be5a31.svg)](./LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20.11-5e8a63.svg)](.nvmrc)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](tsconfig.base.json)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-a78bfa.svg)](./CONTRIBUTING.md)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-a87c28.svg)](./CONTRIBUTING.md)
 [![Deploy to Vercel](https://img.shields.io/badge/deploy-Vercel-000.svg)](https://vercel.com/new)
 
 `react` · `express` · `mongodb-aggregation` · `bullmq` · `redis` · `oauth2` · `data-visualization`
@@ -44,10 +44,11 @@ statistics are partial. Kanzen is the layer above:
 | ----------------------------------------------- | ----------------------- | ----------------------------------------- |
 | Counters, the continue list, and the sync pulse | Seven aggregation views | A force directed star map of your library |
 
-> The interface is dark cartographic: an aurora night sky crossed with the ink and vermillion of a
-> woodblock print. The logo is a vermillion torii gate that raises itself, and a light passes
-> through it while a sync runs. Scrollbars, counters, dropdowns, toggles, and sliders are all
-> themed, and everything respects `prefers-reduced-motion`.
+> The interface is "Shelf": warm and editorial, cream in light and warm charcoal in dark, with a
+> rust accent and sage as a secondary. It follows your system theme and has a manual toggle. The
+> logo is a stack of cards that fans open on load, and a rust bar runs along its base while a sync
+> runs. Scrollbars, counters, dropdowns, toggles, and sliders are all themed, and everything
+> respects `prefers-reduced-motion`.
 
 ## Architecture
 

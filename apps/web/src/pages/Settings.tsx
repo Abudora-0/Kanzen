@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAuth, useMotionPref } from '../lib/store';
+import { useTheme } from '../lib/theme';
 import { Panel, SectionTitle } from '../components/ui/primitives';
 import { Toggle } from '../components/ui/Toggle';
 import { Select } from '../components/ui/Select';
@@ -8,6 +9,7 @@ import { Select } from '../components/ui/Select';
 export function Settings() {
   const { user, setUser } = useAuth();
   const { reduceMotion, setReduceMotion } = useMotionPref();
+  const { theme, setTheme } = useTheme();
 
   const save = useMutation({
     mutationFn: (patch: Record<string, unknown>) => api.updateSettings(patch),
@@ -41,6 +43,18 @@ export function Settings() {
 
       <Panel>
         <SectionTitle eyebrow="feel">Motion and theme</SectionTitle>
+        <div className="mb-4 max-w-xs">
+          <Select
+            label="Theme"
+            value={theme}
+            onChange={(v) => setTheme(v as 'system' | 'light' | 'dark')}
+            options={[
+              { value: 'system', label: 'Match system' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
+          />
+        </div>
         <Toggle
           label="Reduce motion"
           description="Freeze the constellation, logo, and counters. Also follows your system setting."
@@ -58,7 +72,7 @@ export function Settings() {
         />
         <Toggle
           label="Custom cursor"
-          description="Replace the pointer with a constellation reticle."
+          description="Swap the pointer for a small ring that eases toward what it hovers."
           checked={Boolean(user.settings.customCursor)}
           onChange={(v) => applyFeel({ customCursor: v })}
         />
@@ -68,9 +82,9 @@ export function Settings() {
             value={user.settings.accent}
             onChange={(v) => applyFeel({ accent: v })}
             options={[
-              { value: 'vermillion', label: 'Vermillion' },
-              { value: 'aurora', label: 'Aurora teal' },
-              { value: 'gold', label: 'Gold leaf' },
+              { value: 'rust', label: 'Rust' },
+              { value: 'sage', label: 'Sage' },
+              { value: 'gold', label: 'Gold' },
             ]}
           />
         </div>

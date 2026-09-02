@@ -63,7 +63,7 @@ async function seedDemoUser() {
     displayName: 'Kanzen Explorer',
     passwordHash: await hashPassword(env.DEMO_PASSWORD),
     isDemo: true,
-    settings: { accent: 'vermillion' },
+    settings: { accent: 'rust' },
   });
   logger.info(`demo user ${user.email} ready`);
   return user;

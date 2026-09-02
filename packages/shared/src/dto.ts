@@ -1,6 +1,7 @@
 import type { EntryStatus } from './status.js';
 import type { ConnectionStatus, ProviderId } from './providers.js';
 import type { ExternalIds, MediaType, TitleSet } from './media.js';
+import type { Accent } from './theme.js';
 
 export type UserDto = {
   id: string;
@@ -11,7 +12,7 @@ export type UserDto = {
     reduceMotion: boolean;
     soundFx: boolean;
     customCursor: boolean;
-    accent: 'vermillion' | 'aurora' | 'gold';
+    accent: Accent;
   };
   createdAt: string;
 };
