@@ -5,6 +5,7 @@ import { useAuth } from '../lib/store';
 import { useSyncStream } from '../lib/stream';
 import { KanzenMark } from './KanzenMark';
 import { Footer } from './Footer';
+import { CommandPalette } from './CommandPalette';
 import { PageTransition } from './PageTransition';
 import { Icon } from './Icon';
 import { cn } from '../lib/utils';
@@ -69,6 +70,15 @@ export function AppShell() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.dispatchEvent(new Event('kanzen:palette'))}
+              className="hidden items-center gap-2 rounded-md border border-hairline px-2.5 py-1 text-xs text-ink-faint transition hover:border-hairline-bright hover:text-ink-muted lg:flex"
+              aria-label="Open command palette"
+            >
+              <Icon name="search" size={13} />
+              <span>Search</span>
+              <kbd className="rounded border border-hairline px-1 text-[0.6rem]">Ctrl K</kbd>
+            </button>
             {pulse.active ? (
               <span className="hidden items-center gap-1.5 rounded-full border border-aurora-teal/40 bg-aurora-teal/10 px-2 py-0.5 text-[0.7rem] text-aurora-teal sm:inline-flex">
                 <span className="km-spinner h-2.5 w-2.5" aria-hidden />
@@ -159,6 +169,8 @@ export function AppShell() {
       </main>
 
       <Footer workspace={user?.isDemo ? 'demo workspace' : 'your workspace'} />
+
+      <CommandPalette />
 
       {/* mobile bottom tab bar */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-night/95 backdrop-blur-md md:hidden">

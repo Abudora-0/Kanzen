@@ -16,6 +16,13 @@ export function Settings() {
 
   if (!user) return null;
 
+  // Feel settings apply instantly. For a real account they also persist; the
+  // shared demo account keeps them local to this browser session.
+  const applyFeel = (patch: Record<string, unknown>) => {
+    setUser({ ...user, settings: { ...user.settings, ...patch } });
+    if (!user.isDemo) save.mutate(patch);
+  };
+
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
@@ -47,19 +54,19 @@ export function Settings() {
           label="Interface sounds"
           description="Soft clicks on controls. Off by default."
           checked={Boolean(user.settings.soundFx)}
-          onChange={(v) => !user.isDemo && save.mutate({ soundFx: v })}
+          onChange={(v) => applyFeel({ soundFx: v })}
         />
         <Toggle
           label="Custom cursor"
           description="Replace the pointer with a constellation reticle."
           checked={Boolean(user.settings.customCursor)}
-          onChange={(v) => !user.isDemo && save.mutate({ customCursor: v })}
+          onChange={(v) => applyFeel({ customCursor: v })}
         />
         <div className="mt-4 max-w-xs">
           <Select
             label="Accent"
             value={user.settings.accent}
-            onChange={(v) => !user.isDemo && save.mutate({ accent: v })}
+            onChange={(v) => applyFeel({ accent: v })}
             options={[
               { value: 'vermillion', label: 'Vermillion' },
               { value: 'aurora', label: 'Aurora teal' },
@@ -69,7 +76,7 @@ export function Settings() {
         </div>
         {user.isDemo ? (
           <p className="mt-3 text-xs text-ink-faint">
-            The demo account cannot save preferences. Motion still toggles locally.
+            The demo account cannot save preferences. Changes here apply for this session only.
           </p>
         ) : null}
       </Panel>

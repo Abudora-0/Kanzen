@@ -2,6 +2,9 @@ import { useEffect, type ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { useAuth } from './lib/store';
+import { useAccent } from './lib/accent';
+import { useInterfaceSounds } from './lib/sound';
+import { useCustomCursor } from './lib/cursor';
 import { AppShell } from './components/AppShell';
 import { Landing } from './pages/Landing';
 import { AuthPage } from './pages/AuthPage';
@@ -29,6 +32,9 @@ function BootSplash() {
 
 export function App() {
   const bootstrap = useAuth((s) => s.bootstrap);
+  useAccent();
+  useInterfaceSounds();
+  useCustomCursor();
 
   useEffect(() => {
     void bootstrap();
