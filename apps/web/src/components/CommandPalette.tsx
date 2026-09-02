@@ -111,7 +111,7 @@ export function CommandPalette() {
       },
       {
         id: 'nav-connections',
-        label: 'Connections',
+        label: 'Trackers',
         icon: 'connections',
         run: () => (navigate('/connections'), close()),
       },

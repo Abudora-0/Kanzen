@@ -6,6 +6,7 @@ import './styles/theme.css';
 import { App } from './App';
 import { ToastProvider } from './lib/toast';
 import { useMotionPref } from './lib/store';
+import { applyTheme, useTheme } from './lib/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,6 +15,7 @@ const queryClient = new QueryClient({
 });
 
 document.documentElement.dataset.motion = useMotionPref.getState().reduceMotion ? 'off' : 'on';
+applyTheme(useTheme.getState().theme);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

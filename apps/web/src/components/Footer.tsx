@@ -8,7 +8,7 @@ const PRODUCT = [
   { label: 'Deck', to: '/dashboard' },
   { label: 'Library', to: '/library' },
   { label: 'Insights', to: '/insights' },
-  { label: 'Connections', to: '/connections' },
+  { label: 'Trackers', to: '/connections' },
 ];
 const PROJECT = [
   { label: 'Source on GitHub', href: REPO },
@@ -26,10 +26,9 @@ export function Footer({ workspace }: { workspace?: string }) {
           <div>
             <KanzenMark variant="full" size={26} />
             <p className="mt-3 max-w-xs text-sm text-ink-muted">
-              Every list you keep, held as one. A unified media tracker for anime, manga, books, and
-              movies.
+              Every media tracker you use, in one place. Anime, manga, books, and movies, reconciled
+              and kept in sync.
             </p>
-            <p className="mt-3 font-display text-sm text-ink-faint">完全 · kanzen · complete</p>
           </div>
 
           <FooterCol title="Product">

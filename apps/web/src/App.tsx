@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { useAuth } from './lib/store';
 import { useAccent } from './lib/accent';
+import { useThemeInit } from './lib/theme';
 import { useInterfaceSounds } from './lib/sound';
 import { useCustomCursor } from './lib/cursor';
 import { AppShell } from './components/AppShell';
@@ -32,6 +33,7 @@ function BootSplash() {
 
 export function App() {
   const bootstrap = useAuth((s) => s.bootstrap);
+  useThemeInit();
   useAccent();
   useInterfaceSounds();
   useCustomCursor();

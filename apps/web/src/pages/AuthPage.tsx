@@ -8,8 +8,8 @@ import { Icon } from '../components/Icon';
 import { Button } from '../components/ui/primitives';
 
 const LINES = [
-  'One canonical library from every platform you use.',
-  'Conflicts surfaced and resolved in a single click.',
+  'One canonical library from every platform you connect.',
+  'Cross-platform drift, surfaced and resolved in a click.',
   'Insights from real MongoDB aggregation, not a spreadsheet.',
   'A background sync engine you can actually watch run.',
 ];
@@ -87,12 +87,9 @@ export function AuthPage() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       {/* brand panel */}
-      <div className="relative hidden overflow-hidden border-r border-hairline lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="hairline-grid pointer-events-none absolute inset-0" />
-        <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 opacity-70">
-          <div className="aurora-orb h-full w-full" />
-        </div>
-        <div className="starfield pointer-events-none absolute inset-0" />
+      <div className="relative hidden overflow-hidden border-r border-hairline bg-surface lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="paper-grain pointer-events-none absolute inset-0 opacity-70" />
+        <div className="warm-wash pointer-events-none absolute -left-24 -top-24 h-96 w-96" />
 
         <Link to="/" className="relative z-10 w-fit">
           <KanzenMark variant="full" size={30} replayOnHover />
@@ -100,9 +97,9 @@ export function AuthPage() {
 
         <div className="relative z-10">
           <h2 className="font-display text-4xl leading-tight text-ink">
-            Every list you keep,
+            One shelf for everything
             <br />
-            <span className="aurora-text">held as one.</span>
+            <span className="ink-emphasis">you watch and read.</span>
           </h2>
           <div className="mt-6 h-12">
             <AnimatePresence mode="wait">
@@ -121,7 +118,7 @@ export function AuthPage() {
         </div>
 
         <p className="relative z-10 font-display text-sm text-ink-faint">
-          完全 · kanzen · complete
+          every media tracker you use, in one place
         </p>
       </div>
 
@@ -138,7 +135,7 @@ export function AuthPage() {
           <p className="mt-1 text-sm text-ink-muted">
             {mode === 'login'
               ? 'Your library is where you left it.'
-              : 'Start with an empty sky and connect a platform.'}
+              : 'Make an account, then connect your first tracker.'}
           </p>
 
           <form onSubmit={submit} className="mt-6 space-y-3.5">
@@ -248,7 +245,7 @@ function Field({
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
-          className={`w-full rounded-[10px] border bg-night-2/70 px-3 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-vermillion focus:shadow-[0_0_0_3px_rgba(226,84,47,0.15)] ${
+          className={`w-full rounded-[10px] border bg-surface/70 px-3 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-vermillion focus:ring-2 focus:ring-vermillion/25 ${
             error ? 'border-vermillion/60' : 'border-hairline'
           } ${trailing ? 'pr-10' : ''}`}
         />

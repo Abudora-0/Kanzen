@@ -48,7 +48,7 @@ export function Slider({ value, min = 0, max, step = 1, onChange, label, unit, c
           ))}
         </div>
         <div
-          className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-night bg-vermillion shadow-[0_0_12px_rgba(226,84,47,0.6)]"
+          className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface bg-vermillion shadow-card"
           style={{ left: `${pct}%` }}
         />
         <input

@@ -49,8 +49,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       whileTap={{ scale: 0.97 }}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'primary' &&
-          'bg-vermillion text-white shadow-[0_10px_30px_-10px_rgba(226,84,47,0.7)] hover:bg-vermillion-bright hover:shadow-[0_14px_40px_-10px_rgba(226,84,47,0.85)]',
+        variant === 'primary' && 'bg-vermillion text-white shadow-card hover:bg-vermillion-bright',
         variant === 'ghost' &&
           'border border-hairline-bright bg-surface/60 text-ink hover:border-vermillion hover:text-ink',
         variant === 'quiet' && 'text-ink-muted hover:text-ink',

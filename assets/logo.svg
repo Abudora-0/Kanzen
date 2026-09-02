@@ -1,23 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Kanzen">
-  <rect width="96" height="96" rx="22" fill="#0b1022" />
-  <line x1="22" y1="78" x2="74" y2="78" stroke="#5eead4" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
-  <g fill="#e2542f">
-    <rect x="28" width="7" rx="1.5">
-      <animate attributeName="y" values="78;78;24;24;78" keyTimes="0;0.05;0.32;0.9;1" dur="6s" repeatCount="indefinite" />
-      <animate attributeName="height" values="0;0;54;54;0" keyTimes="0;0.05;0.32;0.9;1" dur="6s" repeatCount="indefinite" />
-    </rect>
-    <rect x="61" width="7" rx="1.5">
-      <animate attributeName="y" values="78;78;24;24;78" keyTimes="0;0.08;0.35;0.9;1" dur="6s" repeatCount="indefinite" />
-      <animate attributeName="height" values="0;0;54;54;0" keyTimes="0;0.08;0.35;0.9;1" dur="6s" repeatCount="indefinite" />
-    </rect>
-    <rect x="46.6" y="22" width="2.8" height="14" opacity="0">
-      <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.5;0.6;0.9;1" dur="6s" repeatCount="indefinite" />
-    </rect>
-    <path d="M12 23 Q48 12 84 23 L84 16 Q48 5 12 16 Z" opacity="0">
-      <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.34;0.44;0.9;1" dur="6s" repeatCount="indefinite" />
-    </path>
+  <rect width="96" height="96" rx="22" fill="#f5eee0" />
+  <g transform="rotate(-8 40 54)">
+    <rect x="16" y="30" width="40" height="40" rx="10" fill="none" stroke="#2b2620" stroke-width="5.5" />
   </g>
-  <rect x="22" y="35" width="52" height="6" rx="1.5" fill="#a5371b" opacity="0">
-    <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.42;0.52;0.9;1" dur="6s" repeatCount="indefinite" />
-  </rect>
+  <g transform="rotate(-3 50 46)">
+    <rect x="26" y="22" width="40" height="40" rx="10" fill="none" stroke="#5e8a63" stroke-width="5.5" />
+  </g>
+  <rect x="38" y="16" width="40" height="40" rx="10" fill="#be5a31" />
+  <rect x="22" y="76" width="52" height="5" rx="2.5" fill="#be5a31" opacity="0.5" />
 </svg>

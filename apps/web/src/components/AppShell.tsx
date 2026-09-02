@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../lib/store';
+import { useTheme, type ThemeChoice } from '../lib/theme';
 import { useSyncStream } from '../lib/stream';
 import { KanzenMark } from './KanzenMark';
 import { Footer } from './Footer';
@@ -14,14 +15,26 @@ const NAV = [
   { to: '/dashboard', label: 'Deck', icon: 'deck' },
   { to: '/library', label: 'Library', icon: 'library' },
   { to: '/insights', label: 'Insights', icon: 'insights' },
-  { to: '/connections', label: 'Connections', icon: 'connections' },
+  { to: '/connections', label: 'Trackers', icon: 'connections' },
 ] as const;
+
+const THEME_NEXT: Record<ThemeChoice, ThemeChoice> = {
+  system: 'light',
+  light: 'dark',
+  dark: 'system',
+};
+const THEME_ICON: Record<ThemeChoice, string> = {
+  system: 'monitor',
+  light: 'sun',
+  dark: 'moon',
+};
 
 export function AppShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pulse = useSyncStream(Boolean(user));
+  const { theme, setTheme } = useTheme();
   const routeKey = location.pathname.split('/').slice(0, 3).join('/');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -78,6 +91,14 @@ export function AppShell() {
               <Icon name="search" size={13} />
               <span>Search</span>
               <kbd className="rounded border border-hairline px-1 text-[0.6rem]">Ctrl K</kbd>
+            </button>
+            <button
+              onClick={() => setTheme(THEME_NEXT[theme])}
+              aria-label={`Colour theme: ${theme}. Switch to ${THEME_NEXT[theme]}`}
+              title={`Theme: ${theme}`}
+              className="grid h-9 w-9 place-items-center rounded-md border border-hairline text-ink-soft transition hover:border-hairline-bright md:h-8 md:w-8"
+            >
+              <Icon name={THEME_ICON[theme]} size={16} />
             </button>
             {pulse.active ? (
               <span className="hidden items-center gap-1.5 rounded-full border border-aurora-teal/40 bg-aurora-teal/10 px-2 py-0.5 text-[0.7rem] text-aurora-teal sm:inline-flex">

@@ -11,6 +11,12 @@ type Props = {
 };
 
 const TYPE_GLYPH: Record<MediaType, string> = { anime: 'ア', manga: 'マ', book: '本', movie: '映' };
+const MEDIA_COLOR: Record<MediaType, string> = {
+  anime: 'var(--color-media-anime)',
+  manga: 'var(--color-media-manga)',
+  book: 'var(--color-media-book)',
+  movie: 'var(--color-media-movie)',
+};
 
 function hueFrom(str: string): number {
   let h = 0;
@@ -19,25 +25,25 @@ function hueFrom(str: string): number {
 }
 
 /**
- * A cover poster. Falls back to a deterministic themed placeholder (a torii
- * watermark over a hue derived from the title) when there is no image or it
- * fails to load.
+ * A cover poster. Falls back to a themed placeholder (the theme surface tinted
+ * toward a deterministic hue, a stacked-cards watermark, a media-type mark) when
+ * there is no image or it fails to load. Adapts to light and dark.
  */
-export function CoverImage({ src, alt, type, className, rounded = 'rounded-[10px]' }: Props) {
+export function CoverImage({ src, alt, type, className, rounded = 'rounded-[12px]' }: Props) {
   const [failed, setFailed] = useState(false);
   const show = src && !failed;
   const hue = hueFrom(alt);
 
   return (
     <div
-      className={cn('relative overflow-hidden bg-surface-2', rounded, className)}
+      className={cn(
+        'relative overflow-hidden border border-hairline bg-surface-2',
+        rounded,
+        className,
+      )}
       style={
         !show
-          ? {
-              background: `linear-gradient(155deg,
-                hsl(${hue} 45% 16%),
-                hsl(${(hue + 40) % 360} 40% 11%))`,
-            }
+          ? { background: `color-mix(in oklab, hsl(${hue} 55% 50%) 12%, var(--color-surface))` }
           : undefined
       }
     >
@@ -51,16 +57,31 @@ export function CoverImage({ src, alt, type, className, rounded = 'rounded-[10px
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="absolute inset-0 grid place-items-center">
-          <svg viewBox="0 0 64 64" className="h-1/2 w-1/2 opacity-25">
-            <g fill="var(--color-ink)">
-              <rect x="17.5" y="16" width="5" height="40" rx="1" />
-              <rect x="41.5" y="16" width="5" height="40" rx="1" />
-              <rect x="31" y="15" width="2" height="10" />
-              <path d="M5 15 Q32 8 59 15 L59 10.5 Q32 3.5 5 10.5 Z" />
+        <div className="absolute inset-0">
+          <svg
+            viewBox="0 0 64 64"
+            className="absolute left-1/2 top-1/2 h-1/2 w-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"
+            aria-hidden="true"
+          >
+            <g fill="none" stroke="var(--color-ink)" strokeWidth="3">
+              <rect x="12" y="18" width="20" height="28" rx="4" transform="rotate(-7 22 32)" />
+              <rect x="24" y="14" width="20" height="28" rx="4" transform="rotate(-1 34 28)" />
             </g>
+            <rect
+              x="34"
+              y="12"
+              width="20"
+              height="28"
+              rx="4"
+              transform="rotate(5 44 26)"
+              fill={MEDIA_COLOR[type]}
+              opacity="0.55"
+            />
           </svg>
-          <span className="absolute bottom-1.5 right-2 font-display text-[0.7rem] text-ink/40">
+          <span
+            className="absolute bottom-1.5 right-2 font-display text-[0.7rem]"
+            style={{ color: MEDIA_COLOR[type] }}
+          >
             {TYPE_GLYPH[type]}
           </span>
         </div>

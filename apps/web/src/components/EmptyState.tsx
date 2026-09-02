@@ -11,20 +11,30 @@ type Props = {
 export function EmptyState({ title, body, action, className }: Props) {
   return (
     <div className={cn('glass flex flex-col items-center px-6 py-14 text-center', className)}>
-      <svg viewBox="0 0 64 64" className="mb-4 h-14 w-14 opacity-30">
+      <svg viewBox="0 0 64 64" className="mb-4 h-14 w-14 opacity-45" aria-hidden="true">
         <line
-          x1="12"
-          y1="54"
-          x2="52"
-          y2="54"
-          stroke="var(--color-aurora-teal)"
-          strokeWidth="2"
+          x1="10"
+          y1="50"
+          x2="54"
+          y2="50"
+          stroke="var(--color-sage)"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
-        <g fill="none" stroke="var(--color-ink)" strokeWidth="3" strokeLinecap="round">
-          <path d="M20 18v36 M44 18v36 M16 26h32" />
-          <path d="M8 16 Q32 8 56 16" strokeWidth="5" />
+        <g fill="none" stroke="var(--color-ink)" strokeWidth="2.4">
+          <rect x="14" y="16" width="20" height="30" rx="4" transform="rotate(-7 24 31)" />
+          <rect x="24" y="13" width="20" height="30" rx="4" transform="rotate(-1 34 28)" />
         </g>
+        <rect
+          x="34"
+          y="12"
+          width="20"
+          height="30"
+          rx="4"
+          transform="rotate(5 44 27)"
+          fill="var(--color-vermillion)"
+          opacity="0.3"
+        />
       </svg>
       <h3 className="font-display text-lg text-ink">{title}</h3>
       {body ? <p className="mt-1.5 max-w-sm text-sm text-ink-muted">{body}</p> : null}

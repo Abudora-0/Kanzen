@@ -1,11 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0b1022" />
-  <line x1="15" y1="52" x2="49" y2="52" stroke="#5eead4" stroke-width="2" stroke-linecap="round" opacity="0.6" />
-  <g fill="#e2542f">
-    <rect x="19" y="16" width="5" height="36" rx="1" />
-    <rect x="40" y="16" width="5" height="36" rx="1" />
-    <rect x="31" y="15" width="2" height="9" />
-    <path d="M8 15 Q32 8 56 15 L56 10.5 Q32 3.5 8 10.5 Z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kanzen">
+  <rect width="64" height="64" rx="14" fill="#f5eee0" />
+  <g transform="rotate(-7 26 34)">
+    <rect x="12" y="20" width="27" height="27" rx="6.5" fill="none" stroke="#5e8a63" stroke-width="4" />
   </g>
-  <rect x="15" y="23" width="34" height="4" rx="1" fill="#a5371b" />
+  <rect x="22" y="15" width="27" height="27" rx="6.5" fill="#be5a31" />
+  <rect x="15" y="50" width="34" height="3.5" rx="1.75" fill="#be5a31" opacity="0.5" />
 </svg>

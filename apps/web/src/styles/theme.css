@@ -1,65 +1,123 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------ *
- * Kanzen visual identity: an aurora night sky crossed with the ink   *
- * and vermillion of a woodblock print. Dark first, one accent.       *
+ * Kanzen visual identity: "Shelf" - warm, editorial, poster forward. *
+ * Cream in light, warm charcoal in dark, one rust accent, sage as a  *
+ * secondary. The @theme block holds the light set; the neutral       *
+ * tokens flip under prefers-color-scheme and [data-theme].           *
  * ------------------------------------------------------------------ */
 
 @theme {
-  --color-void: #070a16;
-  --color-night: #0b1022;
-  --color-night-2: #0f1630;
-  --color-surface: #141b38;
-  --color-surface-2: #1b2347;
-  --color-hairline: #263056;
-  --color-hairline-bright: #37427a;
+  /* neutrals - light (cream). Overridden per theme below. */
+  --color-void: #e6dbc4;
+  --color-night: #f3ebdd;
+  --color-night-2: #ffffff;
+  --color-surface: #fffdf8;
+  --color-surface-2: #efe5d3;
+  --color-hairline: #ddd1ba;
+  --color-hairline-bright: #c8b99e;
 
-  --color-ink: #e9ecff;
-  --color-ink-soft: #b9c1e8;
-  --color-ink-muted: #7f8bbd;
-  --color-ink-faint: #5b649a;
+  --color-ink: #2a2620;
+  --color-ink-soft: #4a4339;
+  --color-ink-muted: #6b6353;
+  --color-ink-faint: #928777;
 
-  --color-vermillion: #e2542f;
-  --color-vermillion-bright: #f76a41;
-  --color-vermillion-deep: #a5371b;
-  --color-gold: #d8b36a;
-  --color-aurora-teal: #5eead4;
-  --color-aurora-violet: #a78bfa;
-  --color-aurora-rose: #f4a8d4;
+  /* accent + categorical - single valued, read on both grounds */
+  --color-vermillion: #be5a31;
+  --color-vermillion-bright: #db7446;
+  --color-vermillion-deep: #8a3d1e;
+  --color-sage: #5e8a63;
+  --color-gold: #b98836;
+  --color-aurora-teal: #5e8a63;
+  --color-aurora-violet: #86689f;
+  --color-aurora-rose: #c17e86;
 
-  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --color-media-anime: #cf6b43;
+  --color-media-manga: #5e8a63;
+  --color-media-book: #b98836;
+  --color-media-movie: #86689f;
+
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
-  --font-wordmark: 'Zen Kaku Gothic New', 'Trebuchet MS', system-ui, sans-serif;
 
-  --radius-panel: 18px;
+  --radius-panel: 16px;
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  --shadow-lift: 0 24px 60px -24px rgba(3, 6, 20, 0.8);
-  --shadow-card: 0 10px 30px -18px rgba(3, 6, 20, 0.9);
-  --shadow-glow: 0 0 32px -8px rgba(94, 234, 212, 0.25);
-}
-
-/* Accent theming: the Settings choice swaps the vermillion role tokens, which
-   every bg-vermillion / text-vermillion utility already reads from. */
-:root[data-accent='aurora'] {
-  --color-vermillion: #2fd0b4;
-  --color-vermillion-bright: #5eead4;
-  --color-vermillion-deep: #1c8a78;
-}
-:root[data-accent='gold'] {
-  --color-vermillion: #d8b36a;
-  --color-vermillion-bright: #efc98a;
-  --color-vermillion-deep: #a9863f;
+  --shadow-lift: 0 22px 50px -26px rgba(66, 42, 22, 0.3);
+  --shadow-card: 0 10px 26px -18px rgba(66, 42, 22, 0.24);
+  --shadow-glow: 0 0 28px -10px rgba(190, 90, 49, 0.28);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
   --page-gradient:
-    radial-gradient(1200px 700px at 12% -10%, rgba(167, 139, 250, 0.18), transparent 60%),
-    radial-gradient(1000px 600px at 100% 0%, rgba(94, 234, 212, 0.12), transparent 55%),
-    radial-gradient(900px 900px at 50% 120%, rgba(226, 84, 47, 0.1), transparent 60%);
+    radial-gradient(1100px 600px at 15% -10%, rgba(190, 90, 49, 0.06), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(94, 138, 99, 0.05), transparent 55%);
+}
+
+/* dark neutrals - applied by system preference (unless forced light) and by an
+   explicit [data-theme='dark']. The two blocks carry the same values. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-void: #0b0906;
+    --color-night: #15120d;
+    --color-night-2: #201b14;
+    --color-surface: #1d1912;
+    --color-surface-2: #2a241a;
+    --color-hairline: #342d22;
+    --color-hairline-bright: #493f30;
+    --color-ink: #f2ece0;
+    --color-ink-soft: #d9d0bf;
+    --color-ink-muted: #a89c86;
+    --color-ink-faint: #786d59;
+    --shadow-lift: 0 24px 60px -24px rgba(0, 0, 0, 0.62);
+    --shadow-card: 0 12px 32px -20px rgba(0, 0, 0, 0.68);
+    --shadow-glow: 0 0 32px -8px rgba(219, 116, 70, 0.3);
+    --page-gradient:
+      radial-gradient(1100px 600px at 15% -10%, rgba(219, 116, 70, 0.1), transparent 60%),
+      radial-gradient(900px 520px at 100% 0%, rgba(94, 138, 99, 0.07), transparent 55%);
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-void: #0b0906;
+  --color-night: #15120d;
+  --color-night-2: #201b14;
+  --color-surface: #1d1912;
+  --color-surface-2: #2a241a;
+  --color-hairline: #342d22;
+  --color-hairline-bright: #493f30;
+  --color-ink: #f2ece0;
+  --color-ink-soft: #d9d0bf;
+  --color-ink-muted: #a89c86;
+  --color-ink-faint: #786d59;
+  --shadow-lift: 0 24px 60px -24px rgba(0, 0, 0, 0.62);
+  --shadow-card: 0 12px 32px -20px rgba(0, 0, 0, 0.68);
+  --shadow-glow: 0 0 32px -8px rgba(219, 116, 70, 0.3);
+  --page-gradient:
+    radial-gradient(1100px 600px at 15% -10%, rgba(219, 116, 70, 0.1), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(94, 138, 99, 0.07), transparent 55%);
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+/* Accent theming: the Settings choice swaps the rust role tokens, which every
+   bg-vermillion / text-vermillion utility reads from. Selector names track the
+   stored enum ('aurora' and 'gold' until the Phase 4 rename to 'sage'). */
+:root[data-accent='aurora'],
+:root[data-accent='sage'] {
+  --color-vermillion: #5e8a63;
+  --color-vermillion-bright: #7ba97f;
+  --color-vermillion-deep: #3f6b48;
+}
+:root[data-accent='gold'] {
+  --color-vermillion: #b98836;
+  --color-vermillion-bright: #d3a458;
+  --color-vermillion-deep: #8a6222;
 }
 
 * {
@@ -84,7 +142,7 @@ body {
 }
 
 ::selection {
-  background: rgba(226, 84, 47, 0.35);
+  background: color-mix(in oklab, var(--color-vermillion) 28%, transparent);
   color: var(--color-ink);
 }
 
@@ -94,7 +152,7 @@ h3,
 .font-display {
   font-family: var(--font-display);
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
 }
 
 .tabular {
@@ -102,26 +160,25 @@ h3,
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- themed scrollbar: thin, vermillion thumb, star ticks ---- */
+/* ---- themed scrollbar: thin, hairline thumb warming to rust on hover ---- */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-vermillion-deep) transparent;
+  scrollbar-color: var(--color-hairline-bright) transparent;
 }
 *::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 *::-webkit-scrollbar-track {
-  background: linear-gradient(var(--color-night), var(--color-night));
-  border-left: 1px solid var(--color-hairline);
+  background: var(--color-night);
 }
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-vermillion), var(--color-vermillion-deep));
+  background: var(--color-hairline-bright);
   border-radius: 999px;
-  border: 2px solid var(--color-night);
+  border: 3px solid var(--color-night);
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--color-vermillion-bright), var(--color-vermillion));
+  background: var(--color-vermillion);
 }
 *::-webkit-scrollbar-corner {
   background: var(--color-night);
@@ -129,51 +186,15 @@ h3,
 
 /* ---- focus ring ---- */
 :focus-visible {
-  outline: 2px solid var(--color-vermillion-bright);
+  outline: 2px solid var(--color-vermillion);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 /* ---- keyframes ---- */
-@keyframes kanzen-draw {
-  from {
-    stroke-dashoffset: var(--dash, 400);
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
 @keyframes kanzen-orbit {
   to {
     transform: rotate(360deg);
-  }
-}
-@keyframes kanzen-breathe {
-  0%,
-  100% {
-    opacity: 0.65;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.03);
-  }
-}
-@keyframes kanzen-aurora-drift {
-  0% {
-    background-position:
-      0% 50%,
-      100% 50%;
-  }
-  50% {
-    background-position:
-      100% 50%,
-      0% 50%;
-  }
-  100% {
-    background-position:
-      0% 50%,
-      100% 50%;
   }
 }
 @keyframes kanzen-rise {
@@ -245,9 +266,35 @@ h3,
     transform: translateY(0);
   }
 }
+/* The stack mark fans open on mount. The from-state is a near-settled card so a
+   dropped frame never leaves the logo broken. */
+@keyframes kanzen-shelf-in {
+  from {
+    opacity: 0.85;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .animate-rise {
   animation: kanzen-rise 0.6s var(--ease-out-quint) both;
+}
+
+/* Kanzen mark: the three cards shelve in with a short stagger. */
+.kanzen-card {
+  animation: kanzen-shelf-in 0.5s var(--ease-out-quint) both;
+}
+.kanzen-card-1 {
+  animation-delay: 0s;
+}
+.kanzen-card-2 {
+  animation-delay: 0.05s;
+}
+.kanzen-card-3 {
+  animation-delay: 0.1s;
 }
 
 /* In-view reveal: element renders visible, JS adds .reveal-in to trigger the
@@ -287,37 +334,20 @@ h3,
 .km-spinner {
   display: inline-block;
   border-radius: 999px;
-  border: 2px solid rgba(233, 236, 255, 0.25);
+  border: 2px solid color-mix(in oklab, var(--color-ink) 22%, transparent);
   border-top-color: var(--color-vermillion);
   animation: kanzen-orbit 0.7s linear infinite;
 }
 
-/* The torii mark rises through the ground line on mount. The from-state is a
-   dimmer, lower gate so a skipped frame never leaves it broken. */
-@keyframes kanzen-gate-rise {
-  from {
-    opacity: 0.55;
-    transform: translateY(7px) scale(0.965);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-.kanzen-gate-rise {
-  animation:
-    kanzen-gate-rise 0.7s var(--ease-out-quint) both,
-    kanzen-float 6s ease-in-out 0.9s infinite;
-  transform-origin: 50% 100%;
-}
-
 .glass {
   position: relative;
-  background:
-    linear-gradient(160deg, rgba(27, 35, 71, 0.72), rgba(15, 22, 48, 0.62)), rgba(11, 16, 34, 0.4);
-  backdrop-filter: blur(14px);
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-panel);
+  box-shadow:
+    0 2px 4px rgba(40, 28, 14, 0.04),
+    0 12px 26px -18px rgba(40, 28, 14, 0.14);
 }
 .glass::before {
   content: '';
@@ -328,8 +358,8 @@ h3,
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(233, 236, 255, 0.14) 30%,
-    rgba(233, 236, 255, 0.14) 70%,
+    color-mix(in oklab, var(--color-ink) 10%, transparent) 30%,
+    color-mix(in oklab, var(--color-ink) 10%, transparent) 70%,
     transparent
   );
   pointer-events: none;
@@ -345,10 +375,9 @@ h3,
 }
 
 .wordmark {
-  font-family: var(--font-wordmark);
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  text-indent: 0.3em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.005em;
 }
 .wordmark > span {
   display: inline-block;
@@ -373,7 +402,7 @@ h3,
   width: 26px;
   height: 26px;
   margin: -13px 0 0 -13px;
-  border: 1px solid color-mix(in oklab, var(--color-vermillion) 70%, white 10%);
+  border: 1px solid color-mix(in oklab, var(--color-vermillion) 70%, transparent);
   border-radius: 999px;
   transition:
     width 0.18s ease,
@@ -386,7 +415,7 @@ h3,
   height: 40px;
   margin: -20px 0 0 -20px;
   background: color-mix(in oklab, var(--color-vermillion) 14%, transparent);
-  border-color: var(--color-aurora-teal);
+  border-color: var(--color-sage);
 }
 .kanzen-cursor-dot {
   width: 4px;
@@ -396,50 +425,36 @@ h3,
   background: var(--color-ink);
 }
 
+/* ---- ambient textures ---- */
 .hairline-grid {
   background-image:
     linear-gradient(var(--color-hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-hairline) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(circle at 50% 0%, black, transparent 75%);
-  opacity: 0.25;
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 72%);
+  opacity: 0.35;
 }
 
-.starfield {
-  background-image:
-    radial-gradient(1px 1px at 20% 30%, rgba(199, 210, 254, 0.7), transparent),
-    radial-gradient(1px 1px at 68% 12%, rgba(199, 210, 254, 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 40% 70%, rgba(199, 210, 254, 0.6), transparent),
-    radial-gradient(1px 1px at 85% 55%, rgba(199, 210, 254, 0.55), transparent),
-    radial-gradient(1px 1px at 12% 85%, rgba(199, 210, 254, 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 55% 40%, rgba(94, 234, 212, 0.5), transparent);
-  background-repeat: no-repeat;
-  animation: kanzen-breathe 7s ease-in-out infinite;
-}
-
-.aurora-orb {
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(94, 234, 212, 0.55), transparent 55%),
-    radial-gradient(circle at 70% 60%, rgba(167, 139, 250, 0.5), transparent 55%),
-    radial-gradient(circle at 50% 80%, rgba(226, 84, 47, 0.4), transparent 55%);
-  filter: blur(60px);
-  background-size: 180% 180%;
-  animation: kanzen-aurora-drift 18s ease-in-out infinite;
-}
-
-.aurora-text {
-  background: linear-gradient(
-    92deg,
-    var(--color-aurora-teal),
-    var(--color-aurora-violet),
-    var(--color-vermillion-bright)
+.paper-grain {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-ink) 5%, transparent) 0.4px,
+    transparent 0.5px
   );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: kanzen-shimmer 8s linear infinite alternate;
+  background-size: 11px 11px;
+}
+
+.warm-wash {
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 50% 45%,
+    color-mix(in oklab, var(--color-vermillion) 16%, transparent),
+    transparent 70%
+  );
+  filter: blur(70px);
+}
+
+.ink-emphasis {
+  color: var(--color-vermillion);
 }
 
 .skeleton {

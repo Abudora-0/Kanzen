@@ -82,7 +82,7 @@ export function Select({ value, options, onChange, label, className }: Props) {
             exit={{ opacity: 0, y: -6, rotateX: -40 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             style={{ transformOrigin: 'top center', transformPerspective: 800 }}
-            className="absolute z-40 mt-2 w-full overflow-hidden rounded-[12px] border border-hairline-bright bg-night-2 shadow-[0_24px_60px_-24px_rgba(3,6,20,0.9)]"
+            className="absolute z-40 mt-2 w-full overflow-hidden rounded-[12px] border border-hairline-bright bg-night-2 shadow-lift"
           >
             {options.map((opt, i) => (
               <li key={opt.value} role="option" aria-selected={opt.value === value}>
