@@ -96,7 +96,9 @@ export function Connections() {
                 <div className="flex items-center gap-2.5">
                   <span
                     className="h-8 w-8 rounded-lg"
-                    style={{ background: PROVIDER_COLOR[item.provider] ?? '#e2542f' }}
+                    style={{
+                      background: PROVIDER_COLOR[item.provider] ?? 'var(--color-vermillion)',
+                    }}
                   />
                   <div>
                     <p className="font-display text-ink">{item.meta.name}</p>

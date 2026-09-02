@@ -6,8 +6,8 @@ export const PROVIDER_COLOR: Record<string, string> = {
   anilist: '#4bb3f7',
   mal: '#8aa4e6',
   kitsu: '#f2542d',
-  tmdb: '#5eead4',
-  kanzen: '#e2542f',
+  tmdb: '#01b4e4',
+  kanzen: '#be5a31',
 };
 
 export function formatNumber(n: number): string {

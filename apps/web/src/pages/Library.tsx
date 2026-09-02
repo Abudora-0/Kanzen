@@ -18,7 +18,7 @@ import { CoverImage } from '../components/CoverImage';
 import { EmptyState } from '../components/EmptyState';
 import { Icon } from '../components/Icon';
 import { useToast } from '../lib/toast';
-import { cn, titleOf } from '../lib/utils';
+import { cn, PROVIDER_COLOR, titleOf } from '../lib/utils';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Any status' },
@@ -235,7 +235,8 @@ export function Library() {
                   {entry.sources.map((s) => (
                     <span
                       key={s.provider}
-                      className="h-1.5 w-1.5 rounded-full bg-aurora-teal"
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: PROVIDER_COLOR[s.provider] ?? 'var(--color-sage)' }}
                       title={s.provider}
                     />
                   ))}
@@ -299,22 +300,22 @@ function PosterCard({
           rounded="rounded-none"
           className="aspect-[2/3] w-full"
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-void via-void/85 to-transparent p-2.5 pt-8">
-          <p className="line-clamp-2 text-xs font-medium leading-snug text-ink">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-2.5 pt-7">
+          <p className="line-clamp-2 text-xs font-medium leading-snug text-white drop-shadow">
             {titleOf(entry.work)}
           </p>
-          <p className="tabular mt-0.5 text-[0.65rem] text-ink-muted">
+          <p className="tabular mt-0.5 text-[0.65rem] text-white/75">
             {STATUS_LABEL[entry.status]}
             {entry.score ? ` · ${entry.score}` : ''}
           </p>
         </div>
         {entry.hasConflict ? (
-          <span className="absolute right-1.5 top-1.5 rounded-full bg-gold/90 px-1.5 py-0.5 text-[0.6rem] font-medium text-[#1c1608]">
+          <span className="absolute left-1.5 top-1.5 rounded-full bg-gold px-1.5 py-0.5 text-[0.6rem] font-semibold text-[#2a1c05]">
             !
           </span>
         ) : null}
         {pct > 0 && pct < 100 ? (
-          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-hairline">
+          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-black/30">
             <span className="block h-full bg-vermillion" style={{ width: `${pct}%` }} />
           </span>
         ) : null}

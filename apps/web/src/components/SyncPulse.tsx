@@ -109,7 +109,7 @@ export function SyncPulse({ pulse }: Props) {
             <span className="flex items-center gap-2 text-ink-soft">
               <span
                 className="h-2 w-2 rounded-full"
-                style={{ background: PROVIDER_COLOR[lim.provider] ?? '#e2542f' }}
+                style={{ background: PROVIDER_COLOR[lim.provider] ?? 'var(--color-vermillion)' }}
               />
               {lim.provider}
             </span>

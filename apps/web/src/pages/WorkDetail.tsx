@@ -85,9 +85,9 @@ export function WorkDetail() {
       <div className="glass relative overflow-hidden">
         <div className="absolute inset-0">
           {work.bannerImage ? (
-            <img src={work.bannerImage} alt="" className="h-full w-full object-cover opacity-60" />
+            <img src={work.bannerImage} alt="" className="h-full w-full object-cover opacity-20" />
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-void via-void/85 to-night/60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/92 to-surface/55" />
         </div>
         <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:p-7">
           <CoverImage
@@ -97,7 +97,12 @@ export function WorkDetail() {
             className="h-44 w-32 shrink-0 shadow-lift sm:h-52 sm:w-36"
           />
           <div className="min-w-0">
-            <p className="text-[0.7rem] uppercase tracking-[0.3em] text-vermillion">{work.type}</p>
+            <p
+              className="text-[0.7rem] uppercase tracking-[0.3em]"
+              style={{ color: `var(--color-media-${work.type})` }}
+            >
+              {work.type}
+            </p>
             <h1 className="mt-1 font-display text-2xl leading-tight text-ink sm:text-3xl">
               {titleOf(work)}
             </h1>
@@ -170,7 +175,9 @@ export function WorkDetail() {
                   <span className="flex items-center gap-2 text-ink-soft">
                     <span
                       className="h-2 w-2 rounded-full"
-                      style={{ background: PROVIDER_COLOR[s.provider] ?? '#e2542f' }}
+                      style={{
+                        background: PROVIDER_COLOR[s.provider] ?? 'var(--color-vermillion)',
+                      }}
                     />
                     {s.provider}
                   </span>
