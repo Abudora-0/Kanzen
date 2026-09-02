@@ -31,12 +31,15 @@ type Props = {
   height?: number;
 };
 
+// Kept as literals (canvas cannot read CSS vars); mirrors --color-media-* in
+// theme.css, which are single valued across light and dark.
 const TYPE_COLOR: Record<MediaType, string> = {
-  anime: '#5eead4',
-  manga: '#a78bfa',
-  book: '#f4a8d4',
-  movie: '#f76a41',
+  anime: '#cf6b43',
+  manga: '#5e8a63',
+  book: '#b98836',
+  movie: '#86689f',
 };
+const LINK_COLOR = 'rgba(140, 125, 100, 0.45)';
 const TYPE_LANE: Record<MediaType, number> = { anime: -0.6, manga: -0.2, book: 0.2, movie: 0.6 };
 
 /**
@@ -123,7 +126,7 @@ export function Constellation({ nodes, links, onSelect, height = 460 }: Props) {
       ctx.clearRect(0, 0, w(), height);
       ctx.save();
       ctx.globalAlpha = 0.5;
-      ctx.strokeStyle = '#37427a';
+      ctx.strokeStyle = LINK_COLOR;
       ctx.lineWidth = 1;
       for (const link of data.links) {
         const s = link.source as ConstellationNode;

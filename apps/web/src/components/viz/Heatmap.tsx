@@ -23,9 +23,9 @@ export function Heatmap({ cells }: Props) {
   }, [cells]);
 
   const shade = (count: number) => {
-    if (count === 0) return 'var(--color-surface)';
-    const t = Math.min(1, 0.25 + (count / max) * 0.75);
-    return `color-mix(in oklab, var(--color-vermillion) ${Math.round(t * 100)}%, var(--color-surface))`;
+    if (count === 0) return 'var(--color-surface-2)';
+    const t = Math.min(1, 0.32 + (count / max) * 0.68);
+    return `color-mix(in oklab, var(--color-vermillion) ${Math.round(t * 100)}%, var(--color-surface-2))`;
   };
 
   return (

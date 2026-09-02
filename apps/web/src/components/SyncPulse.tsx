@@ -59,8 +59,8 @@ export function SyncPulse({ pulse }: Props) {
           ) : null}
           <defs>
             <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="var(--color-aurora-teal)" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="var(--color-aurora-teal)" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-vermillion)" stopOpacity="0.45" />
+              <stop offset="100%" stopColor="var(--color-vermillion)" stopOpacity="0" />
             </linearGradient>
           </defs>
 
