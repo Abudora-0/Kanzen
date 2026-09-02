@@ -3,10 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
+import { EmptyState } from '../components/EmptyState';
+import { useToast } from '../lib/toast';
 import { PROVIDER_COLOR, relativeTime } from '../lib/utils';
 
 export function Connections() {
   const qc = useQueryClient();
+  const toast = useToast();
   const [params, setParams] = useSearchParams();
   const { data, isLoading } = useQuery({ queryKey: ['connections'], queryFn: api.connections });
   const runs = useQuery({ queryKey: ['sync-runs'], queryFn: api.syncRuns, refetchInterval: 4000 });
@@ -15,19 +18,28 @@ export function Connections() {
     mutationFn: api.connect,
     onSuccess: (res) => {
       if (res.authUrl) window.location.href = res.authUrl;
-      else qc.invalidateQueries({ queryKey: ['connections'] });
+      else {
+        qc.invalidateQueries({ queryKey: ['connections'] });
+        toast.show('Platform connected');
+      }
     },
+    onError: () => toast.show('Could not start that connection', 'error'),
   });
   const disconnect = useMutation({
     mutationFn: api.disconnect,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['connections'] }),
+    onSuccess: (_res, provider) => {
+      qc.invalidateQueries({ queryKey: ['connections'] });
+      toast.show(`Removed ${provider}`, 'warn');
+    },
   });
   const sync = useMutation({
     mutationFn: (provider?: string) => api.sync({ provider, mode: 'incremental' }),
-    onSuccess: () => {
+    onSuccess: (_res, provider) => {
       qc.invalidateQueries({ queryKey: ['sync-runs'] });
       qc.invalidateQueries({ queryKey: ['sync-status'] });
+      toast.show(provider ? `Sync started for ${provider}` : 'Sync started for all platforms');
     },
+    onError: () => toast.show('Sync could not start', 'error'),
   });
 
   const handledConnect = useRef<string | null>(null);
@@ -79,7 +91,7 @@ export function Connections() {
         {data.catalogue.map((item) => {
           const conn = data.connections.find((c) => c.provider === item.provider);
           return (
-            <div key={item.provider} className="glass p-5">
+            <div key={item.provider} className="glass glass-hover p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2.5">
                   <span
@@ -144,25 +156,30 @@ export function Connections() {
 
       <Panel>
         <SectionTitle eyebrow="queue history">Sync runs</SectionTitle>
-        <ul className="space-y-1.5 text-sm">
-          {(runs.data?.runs ?? []).map((run) => (
-            <li key={run.id} className="flex items-center justify-between">
-              <span className="text-ink-soft">
-                {run.provider} · {run.mode}
-              </span>
-              <span className="tabular text-xs text-ink-muted">
-                {run.state}
-                {run.state === 'done'
-                  ? ` · +${run.stats.created} / ${run.stats.updated} upd / ${run.stats.conflicts} conf`
-                  : ''}{' '}
-                · {relativeTime(run.finishedAt ?? run.startedAt)}
-              </span>
-            </li>
-          ))}
-          {(runs.data?.runs.length ?? 0) === 0 ? (
-            <li className="text-ink-muted">No runs yet.</li>
-          ) : null}
-        </ul>
+        {(runs.data?.runs.length ?? 0) === 0 ? (
+          <EmptyState
+            className="border-0 bg-transparent py-8"
+            title="No sync runs yet"
+            body="Connect a platform and hit Sync to see the queue work through it here."
+          />
+        ) : (
+          <ul className="space-y-1.5 text-sm">
+            {(runs.data?.runs ?? []).map((run) => (
+              <li key={run.id} className="flex items-center justify-between">
+                <span className="text-ink-soft">
+                  {run.provider} · {run.mode}
+                </span>
+                <span className="tabular text-xs text-ink-muted">
+                  {run.state}
+                  {run.state === 'done'
+                    ? ` · +${run.stats.created} / ${run.stats.updated} upd / ${run.stats.conflicts} conf`
+                    : ''}{' '}
+                  · {relativeTime(run.finishedAt ?? run.startedAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Panel>
     </div>
   );

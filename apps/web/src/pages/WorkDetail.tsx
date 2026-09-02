@@ -7,6 +7,7 @@ import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives'
 import { Select } from '../components/ui/Select';
 import { Slider } from '../components/ui/Slider';
 import { CoverImage } from '../components/CoverImage';
+import { Celebrate } from '../components/Celebrate';
 import { Icon } from '../components/Icon';
 import { useToast } from '../lib/toast';
 import { PROVIDER_COLOR, titleOf } from '../lib/utils';
@@ -22,6 +23,7 @@ export function WorkDetail() {
   const [status, setStatus] = useState('planning');
   const [score, setScore] = useState(0);
   const [notes, setNotes] = useState('');
+  const [spark, setSpark] = useState(0);
 
   useEffect(() => {
     if (!data) return;
@@ -38,7 +40,9 @@ export function WorkDetail() {
       qc.invalidateQueries({ queryKey: ['library'] });
       qc.invalidateQueries({ queryKey: ['insights'] });
       qc.invalidateQueries({ queryKey: ['library-stats'] });
+      const done = res.entry.status === 'completed' && data?.entry.status !== 'completed';
       toast.show(res.entry.status === 'completed' ? 'Marked complete' : 'Saved');
+      if (done) setSpark((s) => s + 1);
     },
   });
 
@@ -230,14 +234,17 @@ export function WorkDetail() {
       {/* save bar - inline on desktop, sticky on mobile */}
       <div className="sticky bottom-3 z-20 flex items-center gap-3 sm:static">
         <div className="glass flex flex-1 items-center gap-3 p-3 sm:flex-none sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-          <Button
-            variant="primary"
-            onClick={() => save.mutate()}
-            loading={save.isPending}
-            disabled={!dirty}
-          >
-            {dirty ? 'Save changes' : 'Saved'}
-          </Button>
+          <span className="relative">
+            <Celebrate trigger={spark} />
+            <Button
+              variant="primary"
+              onClick={() => save.mutate()}
+              loading={save.isPending}
+              disabled={!dirty}
+            >
+              {dirty ? 'Save changes' : 'Saved'}
+            </Button>
+          </span>
           {dirty ? (
             <span className="text-xs text-ink-muted">unsaved changes</span>
           ) : save.isSuccess ? (

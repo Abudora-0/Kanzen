@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EntryDto } from '@kanzen/shared';
@@ -11,6 +12,7 @@ import { SyncPulse } from '../components/SyncPulse';
 import { Constellation } from '../components/Constellation';
 import { CoverImage } from '../components/CoverImage';
 import { EmptyState } from '../components/EmptyState';
+import { Celebrate } from '../components/Celebrate';
 import { Icon } from '../components/Icon';
 import { useConstellationData } from '../lib/constellation';
 import { useToast } from '../lib/toast';
@@ -22,6 +24,7 @@ export function Dashboard() {
   const qc = useQueryClient();
   const toast = useToast();
   const pulse = useOutletContext<SyncPulseState>();
+  const [celebrate, setCelebrate] = useState<{ id: string; n: number }>({ id: '', n: 0 });
 
   const stats = useQuery({ queryKey: ['library-stats'], queryFn: api.libraryStats });
   const insights = useQuery({ queryKey: ['insights'], queryFn: api.insights });
@@ -39,11 +42,9 @@ export function Dashboard() {
     mutationFn: (entry: EntryDto) =>
       api.updateEntry(entry.id, { progress: entry.progress + 1, status: 'current' }),
     onSuccess: (res, entry) => {
-      toast.show(
-        res.entry.status === 'completed'
-          ? `Finished ${titleOf(entry.work)}`
-          : `+1 on ${titleOf(entry.work)}`,
-      );
+      const done = res.entry.status === 'completed';
+      toast.show(done ? `Finished ${titleOf(entry.work)}` : `+1 on ${titleOf(entry.work)}`);
+      if (done) setCelebrate((c) => ({ id: entry.id, n: c.n + 1 }));
       qc.invalidateQueries({ queryKey: ['library'] });
       qc.invalidateQueries({ queryKey: ['library-stats'] });
       qc.invalidateQueries({ queryKey: ['insights'] });
@@ -114,14 +115,17 @@ export function Dashboard() {
                       </span>
                     </span>
                   </button>
-                  <button
-                    aria-label="Log one more"
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-hairline-bright text-ink transition hover:border-vermillion disabled:opacity-50"
-                    onClick={() => bump.mutate(entry)}
-                    disabled={bump.isPending}
-                  >
-                    <Icon name="plus" size={15} />
-                  </button>
+                  <span className="relative shrink-0">
+                    {celebrate.id === entry.id ? <Celebrate trigger={celebrate.n} /> : null}
+                    <button
+                      aria-label="Log one more"
+                      className="grid h-8 w-8 place-items-center rounded-md border border-hairline-bright text-ink transition hover:border-vermillion disabled:opacity-50"
+                      onClick={() => bump.mutate(entry)}
+                      disabled={bump.isPending}
+                    >
+                      <Icon name="plus" size={15} />
+                    </button>
+                  </span>
                 </li>
               ))}
             </ul>
