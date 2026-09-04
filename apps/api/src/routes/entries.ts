@@ -5,7 +5,7 @@ import { requireAuth, blockDemoWrites } from '../auth/middleware.js';
 import { asyncHandler, notFound } from '../http/errors.js';
 import { serializeEntry } from '../dto/serialize.js';
 import { mergeSources } from '../sync/merge.js';
-import { enqueueInsights, enqueueWriteback } from '../queue/queues.js';
+import { dispatchWriteback } from '../sync/writeback.js';
 import { invalidate } from '../cache/cache.js';
 
 export const entriesRouter: Router = Router();
@@ -86,13 +86,8 @@ entriesRouter.patch(
       });
     }
 
-    await Promise.all([
-      enqueueWriteback({ userId: String(req.auth!.userId), entryId: String(entry._id) }).catch(
-        () => undefined,
-      ),
-      enqueueInsights({ userId: String(req.auth!.userId), reason: 'edit' }).catch(() => undefined),
-      invalidate(`user:${req.auth!.userId}`),
-    ]);
+    await invalidate(`user:${req.auth!.userId}`);
+    await dispatchWriteback(String(req.auth!.userId), String(entry._id));
 
     res.json({ entry: serializeEntry(entry, work) });
   }),
@@ -151,13 +146,8 @@ entriesRouter.post(
     );
     await entry.save();
 
-    await Promise.all([
-      enqueueWriteback({ userId: String(req.auth!.userId), entryId: String(entry._id) }).catch(
-        () => undefined,
-      ),
-      enqueueInsights({ userId: String(req.auth!.userId), reason: 'edit' }).catch(() => undefined),
-      invalidate(`user:${req.auth!.userId}`),
-    ]);
+    await invalidate(`user:${req.auth!.userId}`);
+    await dispatchWriteback(String(req.auth!.userId), String(entry._id));
 
     res.json({ entry: serializeEntry(entry, work) });
   }),

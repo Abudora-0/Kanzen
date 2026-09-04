@@ -99,15 +99,17 @@ export class TmdbProvider implements MediaProvider {
     };
   }
 
-  async getAuthUrl(input: { redirectUri: string }): Promise<string> {
+  async getAuthUrl(input: { state: string; redirectUri: string }): Promise<string> {
     if (!this.isConfigured()) throw new NotConfiguredError('tmdb');
+    // TMDB does not echo an OAuth state, so carry it on the redirect URL itself.
+    const redirectTo = `${input.redirectUri}?state=${encodeURIComponent(input.state)}`;
     const { data } = await providerFetch<{ request_token: string; success: boolean }>(
       'tmdb',
       `${API}/4/auth/request_token`,
       {
         method: 'POST',
         headers: this.headers(),
-        body: JSON.stringify({ redirect_to: input.redirectUri }),
+        body: JSON.stringify({ redirect_to: redirectTo }),
       },
     );
     if (!data.request_token) throw new ProviderAuthError('tmdb', 'Could not create request token');

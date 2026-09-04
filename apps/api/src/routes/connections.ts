@@ -107,9 +107,10 @@ connectionsRouter.get(
     const web = env.WEB_ORIGIN.split(',')[0]!.trim();
 
     const rawState = state ? await getRedis().get(stateKey(state)) : null;
-    // TMDB does not echo state, so fall back to the most recent pending state.
-    const parsed = rawState ? (JSON.parse(rawState) as { userId: string; verifier: string }) : null;
-    if (!code || (!parsed && provider !== 'tmdb')) {
+    const parsed = rawState
+      ? (JSON.parse(rawState) as { userId: string; provider: string; verifier: string })
+      : null;
+    if (!code || !parsed || parsed.provider !== provider) {
       return res.redirect(`${web}/connections?error=oauth_state`);
     }
 
@@ -118,11 +119,10 @@ connectionsRouter.get(
       const redirectUri = `${env.API_PUBLIC_URL}/api/connections/${provider}/callback`;
       const { tokens, handle } = await adapter.exchangeCode({
         code,
-        verifier: parsed?.verifier ?? '',
+        verifier: parsed.verifier,
         redirectUri,
       });
-      const userId = parsed?.userId;
-      if (!userId) return res.redirect(`${web}/connections?error=oauth_state`);
+      const userId = parsed.userId;
 
       await Connection.findOneAndUpdate(
         { userId, provider },

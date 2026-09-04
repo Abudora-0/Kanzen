@@ -11,10 +11,11 @@ import {
   type TokenRefreshJob,
   type WritebackJob,
 } from '../queue/queues.js';
-import { Connection, Entry, SyncRun, Work } from '../models/index.js';
+import { Connection, SyncRun } from '../models/index.js';
 import { runSync } from '../sync/engine.js';
+import { runWriteback } from '../sync/writeback.js';
 import { refreshInsightSnapshot } from '../insights/compute.js';
-import { buildSyncContext, decryptTokens, persistTokens, registry } from '../providers/context.js';
+import { decryptTokens, persistTokens, registry } from '../providers/context.js';
 import { withProviderLimit } from '../ratelimit/limiter.js';
 import { publishEvent } from '../events/bus.js';
 
@@ -61,52 +62,7 @@ async function processSync(job: Job<SyncJob>) {
 
 async function processWriteback(job: Job<WritebackJob>) {
   if (demoMode) return { skipped: 'demo' };
-  const entry = await Entry.findById(job.data.entryId);
-  if (!entry) return { skipped: 'missing' };
-  const work = await Work.findById(entry.workId);
-  if (!work) return { skipped: 'missing-work' };
-
-  for (const source of entry.sources) {
-    if (!source.dirty) continue;
-    const connection = await Connection.findOne({
-      userId: entry.userId,
-      provider: source.provider,
-    });
-    if (!connection) continue;
-    const provider = registry.get(source.provider as ProviderId);
-    const ctx = buildSyncContext(connection, { mode: 'incremental' });
-    const externalWorkId = String(
-      work.externalIds?.[
-        source.provider === 'tmdb' ? 'tmdb' : source.provider === 'mal' ? 'mal' : 'anilist'
-      ] ??
-        work.externalIds?.anilist ??
-        '',
-    );
-    try {
-      await withProviderLimit(source.provider as ProviderId, () =>
-        provider.updateEntry(ctx, {
-          providerEntryId: source.providerEntryId,
-          externalWorkId,
-          status: entry.status,
-          progress: entry.progress,
-          score: entry.score ?? null,
-        }),
-      );
-      source.set('dirty', false);
-      source.set('status', entry.status);
-      source.set('progress', entry.progress);
-      source.set('score', entry.score ?? null);
-      source.set('syncedAt', new Date());
-    } catch (err) {
-      logger.warn(
-        { err: (err as Error).message, provider: source.provider },
-        'writeback failed, will retry',
-      );
-      throw err;
-    }
-  }
-  await entry.save();
-  return { pushed: true };
+  return runWriteback(job.data.entryId);
 }
 
 async function processInsights(job: Job<InsightsJob>) {

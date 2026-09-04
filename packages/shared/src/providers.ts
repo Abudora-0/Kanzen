@@ -36,7 +36,7 @@ export const PROVIDERS: Record<ProviderId, ProviderMeta> = {
     auth: 'oauth2-pkce',
     rateLimit: { requestsPerMinute: 60, burst: 6 },
     color: '#2e51a2',
-    status: 'stub',
+    status: 'live',
     docs: 'https://myanimelist.net/apiconfig/references/api/v2',
   },
   kitsu: {

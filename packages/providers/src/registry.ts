@@ -1,11 +1,13 @@
 import type { ProviderId } from '@kanzen/shared';
 import { AniListProvider } from './adapters/anilist.js';
+import { MalProvider } from './adapters/mal.js';
 import { TmdbProvider } from './adapters/tmdb.js';
 import { StubProvider } from './adapters/stub.js';
 import type { MediaProvider } from './types.js';
 
 export type ProviderConfig = {
   anilist?: { clientId?: string; clientSecret?: string };
+  mal?: { clientId?: string; clientSecret?: string };
   tmdb?: { readToken?: string };
 };
 
@@ -17,8 +19,8 @@ export type ProviderRegistry = {
 export function createProviderRegistry(config: ProviderConfig = {}): ProviderRegistry {
   const providers: Record<ProviderId, MediaProvider> = {
     anilist: new AniListProvider(config.anilist ?? {}),
+    mal: new MalProvider(config.mal ?? {}),
     tmdb: new TmdbProvider(config.tmdb ?? {}),
-    mal: new StubProvider('mal'),
     kitsu: new StubProvider('kitsu'),
   };
 

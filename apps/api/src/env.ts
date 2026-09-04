@@ -28,6 +28,8 @@ const schema = z.object({
 
   ANILIST_CLIENT_ID: z.string().optional(),
   ANILIST_CLIENT_SECRET: z.string().optional(),
+  MAL_CLIENT_ID: z.string().optional(),
+  MAL_CLIENT_SECRET: z.string().optional(),
   TMDB_READ_TOKEN: z.string().optional(),
 
   CRON_SECRET: z.string().default('dev-cron-secret'),
@@ -61,6 +63,10 @@ export const providerConfig = {
   anilist: {
     clientId: env.ANILIST_CLIENT_ID,
     clientSecret: env.ANILIST_CLIENT_SECRET,
+  },
+  mal: {
+    clientId: env.MAL_CLIENT_ID,
+    clientSecret: env.MAL_CLIENT_SECRET,
   },
   tmdb: {
     readToken: env.TMDB_READ_TOKEN,

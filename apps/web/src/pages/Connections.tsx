@@ -109,14 +109,20 @@ export function Connections() {
                   </div>
                 </div>
                 {item.meta.status === 'stub' ? (
-                  <Badge tone="warn">stub adapter</Badge>
-                ) : (
+                  <Badge tone="neutral">not available</Badge>
+                ) : data.demoMode ? (
+                  <Badge tone="violet">demo data</Badge>
+                ) : item.configured ? (
                   <Badge tone="teal">live</Badge>
+                ) : (
+                  <Badge tone="warn">needs keys</Badge>
                 )}
               </div>
 
               <p className="mt-3 text-xs text-ink-faint">
-                {item.meta.rateLimit.requestsPerMinute} req/min · burst {item.meta.rateLimit.burst}
+                {item.meta.status === 'stub'
+                  ? 'Kitsu has no third-party OAuth yet'
+                  : `${item.meta.rateLimit.requestsPerMinute} req/min · burst ${item.meta.rateLimit.burst}`}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
@@ -149,7 +155,11 @@ export function Connections() {
                       loading={connect.isPending}
                       disabled={!item.configured}
                     >
-                      {item.configured ? 'Connect' : 'Needs keys'}
+                      {item.configured
+                        ? 'Connect'
+                        : item.meta.status === 'stub'
+                          ? 'Not available'
+                          : 'Needs keys'}
                     </Button>
                   )}
                 </div>

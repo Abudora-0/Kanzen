@@ -190,8 +190,10 @@ pnpm seed && pnpm dev                    # Redis is optional, the app degrades g
 | `TOKEN_ENCRYPTION_KEY`                       | 32 byte hex key, encrypts provider tokens at rest with AES-256-GCM                      |
 | `PROVIDERS_DEMO_MODE`                        | `true` serves fixture data and needs no OAuth, this is the showcase default             |
 | `DEMO_EMAIL`, `DEMO_PASSWORD`                | the seeded read only demo account                                                       |
-| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | real AniList OAuth, redirect URI is `<API_PUBLIC_URL>/api/connections/anilist/callback` |
-| `TMDB_READ_TOKEN`                            | TMDB v4 read access token                                                               |
+| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | AniList OAuth, redirect `<API_PUBLIC_URL>/api/connections/anilist/callback`              |
+| `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET`         | MyAnimeList OAuth, redirect `<API_PUBLIC_URL>/api/connections/mal/callback`              |
+| `TMDB_READ_TOKEN`                            | TMDB v4 read access token, also enriches seed cover art                                 |
+| `WEB_ORIGIN`, `API_PUBLIC_URL`               | deployment origin, required for OAuth redirects when demo mode is off                   |
 | `CRON_SECRET`                                | bearer token the Vercel cron sends to `/api/cron/sync`                                  |
 | `VITE_API_URL`                               | only when the web app and API are on different origins                                  |
 
@@ -252,18 +254,29 @@ Then open the site and choose **Explore the demo**.
 
 ### Turning on real syncs
 
-Add these environment variables on Vercel and redeploy:
+Set these on Vercel and redeploy. `<origin>` is your deployment URL, e.g.
+`https://kanzen.example.com`.
 
-| Variable | Where to get it |
+| Variable | Value / where to get it |
 | --- | --- |
-| `PROVIDERS_DEMO_MODE` | set to `false` |
-| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | create a client at [anilist.co/settings/developer](https://anilist.co/settings/developer), redirect URL `https://<your-domain>/api/connections/anilist/callback` |
-| `TMDB_READ_TOKEN` | the v4 Read Access Token from [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
-| `WEB_ORIGIN`, `API_PUBLIC_URL` | your deployment URL, needed for the OAuth redirect |
+| `PROVIDERS_DEMO_MODE` | `false` |
+| `WEB_ORIGIN`, `API_PUBLIC_URL` | `<origin>` (both), needed so OAuth redirects land back on the app |
+| `ANILIST_CLIENT_ID`, `ANILIST_CLIENT_SECRET` | [anilist.co/settings/developer](https://anilist.co/settings/developer). Redirect URL: `<origin>/api/connections/anilist/callback` |
+| `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET` | [myanimelist.net/apiconfig](https://myanimelist.net/apiconfig), app type "web". Redirect URL: `<origin>/api/connections/mal/callback` |
+| `TMDB_READ_TOKEN` | v4 Read Access Token from [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api). No redirect URL to register (passed as `redirect_to`). |
 
-That is the whole setup. The API runs each sync inline in the request, so no
-separate worker is required. The seeded demo account keeps working on fixture
-data because its connections carry a per connection demo flag.
+Each provider then shows a real "Connect" button on the Trackers page and, once
+linked, appears as a source on every entry it tracks. Local edits (progress,
+status, score) are pushed back to every linked provider.
+
+AniList, MyAnimeList, and TMDB are live. **Kitsu** stays fixture-only: its OAuth
+only offers a password grant, and Kanzen does not collect provider passwords.
+Providers without credentials show a disabled "Needs keys" button.
+
+The API runs each sync and write-back inline in the request, so no separate
+worker is required (see the next section to move that onto a queue). The seeded
+demo account keeps working on fixture data because its connections carry a per
+connection demo flag, so demo visitors are unaffected.
 
 ### Moving sync onto a queue worker (optional, for scale)
 
