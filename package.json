@@ -9,7 +9,7 @@
   "engines": {
     "node": ">=20.11.0"
   },
-  "packageManager": "pnpm@11.13.0",
+  "packageManager": "pnpm@11.25.0",
   "scripts": {
     "predev": "pnpm --filter @kanzen/shared build && pnpm --filter @kanzen/providers build",
     "dev": "pnpm --parallel --filter \"@kanzen/shared\" --filter \"@kanzen/providers\" --filter \"./apps/*\" dev",
