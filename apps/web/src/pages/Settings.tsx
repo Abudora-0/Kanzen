@@ -100,9 +100,9 @@ export function Settings() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <dt className="text-ink-muted">{label}</dt>
-      <dd className="text-ink">{value}</dd>
+    <div className="flex items-center justify-between gap-3">
+      <dt className="shrink-0 text-ink-muted">{label}</dt>
+      <dd className="truncate text-right text-ink">{value}</dd>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.7rem] tracking-wide',
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.7rem] tracking-wide transition-colors duration-200',
         tone === 'neutral' && 'border-hairline text-ink-muted',
         tone === 'accent' && 'border-vermillion/40 bg-vermillion/10 text-vermillion-bright',
         tone === 'teal' && 'border-aurora-teal/40 bg-aurora-teal/10 text-aurora-teal',

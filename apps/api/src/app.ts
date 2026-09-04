@@ -22,7 +22,17 @@ export function createApp(): Express {
 
   app.use(
     helmet({
-      contentSecurityPolicy: false,
+      // The API only ever returns JSON, so a locked-down default (no
+      // scripts, no frames, same-origin only) is safe here. The HTML/JS
+      // frontend is a static Vercel deployment with its own CSP, set via
+      // headers in vercel.json.
+      contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+          defaultSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );

@@ -96,7 +96,7 @@ export function Dashboard() {
               {inProgress.data!.items.slice(0, 6).map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3 py-2">
                   <button
-                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    className="group -mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-[10px] px-2 py-1 text-left transition hover:bg-surface-2/70"
                     onClick={() => navigate(`/library/${entry.id}`)}
                   >
                     <CoverImage
@@ -106,7 +106,9 @@ export function Dashboard() {
                       className="h-12 w-9 shrink-0"
                     />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm text-ink">{titleOf(entry.work)}</span>
+                      <span className="block truncate text-sm text-ink transition group-hover:text-vermillion">
+                        {titleOf(entry.work)}
+                      </span>
                       <span className="tabular block text-xs text-ink-muted">
                         {entry.progress}
                         {entry.progressMax ? ` / ${entry.progressMax}` : ''}{' '}
@@ -163,7 +165,10 @@ export function Dashboard() {
         <SectionTitle eyebrow="history">Recent sync runs</SectionTitle>
         <ul className="space-y-1.5 text-sm">
           {(runs.data?.runs ?? []).slice(0, 6).map((run) => (
-            <li key={run.id} className="flex items-center justify-between">
+            <li
+              key={run.id}
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+            >
               <span className="text-ink-soft">
                 {run.provider} · {run.mode}
               </span>

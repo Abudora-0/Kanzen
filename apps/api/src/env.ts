@@ -58,6 +58,23 @@ export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
 export const isTest = env.NODE_ENV === 'test';
 
+const DEV_DEFAULTS = {
+  JWT_ACCESS_SECRET: 'dev-access-secret-change-me-please',
+  JWT_REFRESH_SECRET: 'dev-refresh-secret-change-me-please',
+  TOKEN_ENCRYPTION_KEY: '0000000000000000000000000000000000000000000000000000000000000000',
+} as const;
+
+if (isProd) {
+  const leftAtDefault = (Object.keys(DEV_DEFAULTS) as (keyof typeof DEV_DEFAULTS)[]).filter(
+    (key) => env[key] === DEV_DEFAULTS[key],
+  );
+  if (leftAtDefault.length > 0) {
+    throw new Error(
+      `Refusing to start in production with dev-default secrets: ${leftAtDefault.join(', ')}. Set real values in the environment.`,
+    );
+  }
+}
+
 /** Real provider credentials present, so OAuth can run for that provider. */
 export const providerConfig = {
   anilist: {

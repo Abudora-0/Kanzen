@@ -4,8 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
 import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 import { useToast } from '../lib/toast';
-import { PROVIDER_COLOR, relativeTime } from '../lib/utils';
+import { PROVIDER_COLOR, PROVIDER_ICON, relativeTime } from '../lib/utils';
 
 export function Connections() {
   const qc = useQueryClient();
@@ -94,15 +95,17 @@ export function Connections() {
         {data.catalogue.map((item) => {
           const conn = data.connections.find((c) => c.provider === item.provider);
           return (
-            <div key={item.provider} className="glass glass-hover p-5">
+            <div key={item.provider} className="glass glass-hover lift p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2.5">
                   <span
-                    className="h-8 w-8 rounded-lg"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-white"
                     style={{
                       background: PROVIDER_COLOR[item.provider] ?? 'var(--color-vermillion)',
                     }}
-                  />
+                  >
+                    <Icon name={PROVIDER_ICON[item.provider] ?? 'spark'} size={17} />
+                  </span>
                   <div>
                     <p className="font-display text-ink">{item.meta.name}</p>
                     <p className="text-xs text-ink-muted">{item.meta.media.join(', ')}</p>
@@ -186,7 +189,10 @@ export function Connections() {
         ) : (
           <ul className="space-y-1.5 text-sm">
             {(runs.data?.runs ?? []).map((run) => (
-              <li key={run.id} className="flex items-center justify-between">
+              <li
+                key={run.id}
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+              >
                 <span className="text-ink-soft">
                   {run.provider} · {run.mode}
                 </span>

@@ -36,15 +36,39 @@ const TONE: Record<string, string> = {
   movie: 'var(--color-media-movie)',
 };
 
-const STRIP: { title: string; type: MediaType }[] = [
-  { title: 'Frieren', type: 'anime' },
-  { title: 'Vinland Saga', type: 'manga' },
-  { title: 'Dune', type: 'book' },
-  { title: 'Blade Runner 2049', type: 'movie' },
-  { title: 'Berserk', type: 'manga' },
-  { title: 'Cowboy Bebop', type: 'anime' },
-  { title: 'Arrival', type: 'movie' },
-  { title: 'Hyperion', type: 'book' },
+const STRIP: { title: string; type: MediaType; src: string }[] = [
+  {
+    title: 'Frieren',
+    type: 'anime',
+    src: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg',
+  },
+  {
+    title: 'Vinland Saga',
+    type: 'manga',
+    src: 'https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/bx30642-0mjRDkf4THpo.jpg',
+  },
+  { title: 'Dune', type: 'book', src: 'https://covers.openlibrary.org/b/id/11481354-L.jpg' },
+  {
+    title: 'Blade Runner 2049',
+    type: 'movie',
+    src: 'https://image.tmdb.org/t/p/w500/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg',
+  },
+  {
+    title: 'Berserk',
+    type: 'manga',
+    src: 'https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/bx30002-Cul4OeN7bYtn.jpg',
+  },
+  {
+    title: 'Cowboy Bebop',
+    type: 'anime',
+    src: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1-GCsPm7waJ4kS.png',
+  },
+  {
+    title: 'Arrival',
+    type: 'movie',
+    src: 'https://image.tmdb.org/t/p/w500/pEzNVQfdzYDzVK0XqxERIw2x2se.jpg',
+  },
+  { title: 'Hyperion', type: 'book', src: 'https://covers.openlibrary.org/b/id/380332-L.jpg' },
 ];
 
 export function Landing() {
@@ -56,7 +80,7 @@ export function Landing() {
       <div className="paper-grain pointer-events-none absolute inset-0 opacity-60" />
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-6">
-        <KanzenMark variant="full" size={30} replayOnHover />
+        <KanzenMark variant="full" size={36} replayOnHover />
         <Link
           to={user ? '/dashboard' : '/enter'}
           className="rounded-[12px] border border-hairline-bright px-4 py-1.5 text-sm text-ink transition hover:border-vermillion"
@@ -67,7 +91,7 @@ export function Landing() {
 
       <section className="relative z-10 mx-auto max-w-5xl px-5 pb-16 pt-14 text-center">
         <div className="mx-auto mb-9 w-fit">
-          <KanzenMark size={104} replayOnHover />
+          <KanzenMark size={140} replayOnHover />
         </div>
         <p className="mb-4 text-[0.72rem] uppercase tracking-[0.34em] text-vermillion">
           track all your trackers in one place
@@ -103,6 +127,7 @@ export function Landing() {
           {STRIP.map((s) => (
             <CoverImage
               key={s.title}
+              src={s.src}
               alt={s.title}
               type={s.type}
               className="aspect-[2/3] w-24 shrink-0 sm:w-28"
@@ -131,7 +156,7 @@ function FeatureCard({
 }) {
   const reveal = useInViewReveal<HTMLDivElement>(delay);
   return (
-    <div ref={reveal.ref} className={`glass glass-hover p-6 ${reveal.className}`}>
+    <div ref={reveal.ref} className={`glass glass-hover lift p-6 ${reveal.className}`}>
       <span className="mb-3 block h-1 w-10 rounded-full" style={{ background: TONE[f.tone] }} />
       <h3 className="mb-2 font-display text-lg text-ink">{f.title}</h3>
       <p className="text-sm text-ink-muted">{f.body}</p>

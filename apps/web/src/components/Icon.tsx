@@ -31,6 +31,11 @@ const PATHS: Record<string, string> = {
   book: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z M4 19a2 2 0 0 0 2 2h13',
   spark:
     'M12 3v4 M12 17v4 M3 12h4 M17 12h4 M6 6l2.5 2.5 M15.5 15.5 18 18 M6 18l2.5-2.5 M15.5 8.5 18 6',
+  // Provider marks: simplified, hand-drawn glyphs (not reproductions of the
+  // official logos) sized to sit inside a tracker card's colored badge.
+  anilist: 'M5 19L12 5L19 19 M8.2 13H15.8',
+  mal: 'M4 19V6L12 14L20 6V19',
+  kitsu: 'M5 15L4 4L12 11L20 4L19 15L12 20Z',
 };
 
 type Props = SVGProps<SVGSVGElement> & { name: keyof typeof PATHS | string; size?: number };

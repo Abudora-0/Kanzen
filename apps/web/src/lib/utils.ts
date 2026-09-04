@@ -10,6 +10,14 @@ export const PROVIDER_COLOR: Record<string, string> = {
   kanzen: '#be5a31',
 };
 
+export const PROVIDER_ICON: Record<string, string> = {
+  anilist: 'anilist',
+  mal: 'mal',
+  kitsu: 'kitsu',
+  tmdb: 'film',
+  kanzen: 'spark',
+};
+
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat('en-US').format(Math.round(n));
 }

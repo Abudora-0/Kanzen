@@ -6,12 +6,14 @@ import { hashPassword, verifyPassword } from '../auth/password.js';
 import { clearAuthCookies, setAuthCookies, verifyRefresh } from '../auth/jwt.js';
 import { requireAuth } from '../auth/middleware.js';
 import { asyncHandler, badRequest, conflict, unauthorized } from '../http/errors.js';
+import { authRateLimit } from '../http/rateLimit.js';
 import { serializeUser } from '../dto/serialize.js';
 
 export const authRouter: Router = Router();
 
 authRouter.post(
   '/register',
+  authRateLimit,
   asyncHandler(async (req, res) => {
     const body = registerSchema.parse(req.body);
     const existing = await User.findOne({ email: body.email });
@@ -29,6 +31,7 @@ authRouter.post(
 
 authRouter.post(
   '/login',
+  authRateLimit,
   asyncHandler(async (req, res) => {
     const body = loginSchema.parse(req.body);
     const user = await User.findOne({ email: body.email });
@@ -54,6 +57,7 @@ authRouter.post(
 
 authRouter.post(
   '/refresh',
+  authRateLimit,
   asyncHandler(async (req, res) => {
     const token = req.cookies?.kanzen_refresh;
     if (!token) throw unauthorized('No refresh token');

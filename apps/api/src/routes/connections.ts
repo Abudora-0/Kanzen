@@ -8,6 +8,7 @@ import { registry } from '../providers/context.js';
 import { encryptJson } from '../crypto/tokenCipher.js';
 import { requireAuth, blockDemoWrites } from '../auth/middleware.js';
 import { asyncHandler, badRequest, notFound } from '../http/errors.js';
+import { authRateLimit } from '../http/rateLimit.js';
 import { serializeConnection } from '../dto/serialize.js';
 import { dispatchSync } from '../sync/dispatch.js';
 import { logger } from '../logger.js';
@@ -103,6 +104,7 @@ connectionsRouter.post(
   '/:provider/credentials',
   requireAuth,
   blockDemoWrites,
+  authRateLimit,
   asyncHandler(async (req, res) => {
     const { provider } = req.params;
     assertProvider(provider);
