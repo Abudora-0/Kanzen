@@ -45,6 +45,11 @@ export const resolveConflictSchema = z.object({
   strategy: z.enum(['prefer-local', 'prefer-remote', 'prefer-furthest']),
 });
 
+export const credentialsSchema = z.object({
+  username: z.string().min(1).max(200),
+  password: z.string().min(1).max(400),
+});
+
 export const settingsSchema = z.object({
   reduceMotion: z.boolean().optional(),
   soundFx: z.boolean().optional(),
@@ -58,3 +63,4 @@ export type EntryUpdateInput = z.infer<typeof entryUpdateSchema>;
 export type LibraryQuery = z.infer<typeof libraryQuerySchema>;
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
+export type CredentialsInput = z.infer<typeof credentialsSchema>;

@@ -1,8 +1,8 @@
 import type { ProviderId } from '@kanzen/shared';
 import { AniListProvider } from './adapters/anilist.js';
 import { MalProvider } from './adapters/mal.js';
+import { KitsuProvider } from './adapters/kitsu.js';
 import { TmdbProvider } from './adapters/tmdb.js';
-import { StubProvider } from './adapters/stub.js';
 import type { MediaProvider } from './types.js';
 
 export type ProviderConfig = {
@@ -20,8 +20,8 @@ export function createProviderRegistry(config: ProviderConfig = {}): ProviderReg
   const providers: Record<ProviderId, MediaProvider> = {
     anilist: new AniListProvider(config.anilist ?? {}),
     mal: new MalProvider(config.mal ?? {}),
+    kitsu: new KitsuProvider(),
     tmdb: new TmdbProvider(config.tmdb ?? {}),
-    kitsu: new StubProvider('kitsu'),
   };
 
   return {

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
 import { EmptyState } from '../components/EmptyState';
 import { useToast } from '../lib/toast';
@@ -120,9 +120,7 @@ export function Connections() {
               </div>
 
               <p className="mt-3 text-xs text-ink-faint">
-                {item.meta.status === 'stub'
-                  ? 'Kitsu has no third-party OAuth yet'
-                  : `${item.meta.rateLimit.requestsPerMinute} req/min · burst ${item.meta.rateLimit.burst}`}
+                {item.meta.rateLimit.requestsPerMinute} req/min · burst {item.meta.rateLimit.burst}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
@@ -133,7 +131,7 @@ export function Connections() {
                       last sync {relativeTime(conn.lastSyncedAt)}
                     </span>
                   </span>
-                ) : (
+                ) : item.meta.auth === 'password' && !data.demoMode ? null : (
                   <span className="text-sm text-ink-muted">not connected</span>
                 )}
                 <div className="flex gap-2">
@@ -148,22 +146,30 @@ export function Connections() {
                         Remove
                       </Button>
                     </>
-                  ) : (
+                  ) : item.meta.auth === 'password' && !data.demoMode ? null : (
                     <Button
                       variant="primary"
                       onClick={() => connect.mutate(item.provider)}
                       loading={connect.isPending}
                       disabled={!item.configured}
                     >
-                      {item.configured
-                        ? 'Connect'
-                        : item.meta.status === 'stub'
-                          ? 'Not available'
-                          : 'Needs keys'}
+                      {item.configured ? 'Connect' : 'Needs keys'}
                     </Button>
                   )}
                 </div>
               </div>
+
+              {!conn && item.meta.auth === 'password' && !data.demoMode ? (
+                <PasswordConnect
+                  provider={item.provider}
+                  name={item.meta.name}
+                  onDone={() => {
+                    qc.invalidateQueries({ queryKey: ['connections'] });
+                    qc.invalidateQueries({ queryKey: ['sync-runs'] });
+                    toast.show(`Connected ${item.meta.name}`);
+                  }}
+                />
+              ) : null}
             </div>
           );
         })}
@@ -197,5 +203,86 @@ export function Connections() {
         )}
       </Panel>
     </div>
+  );
+}
+
+function PasswordConnect({
+  provider,
+  name,
+  onDone,
+}: {
+  provider: string;
+  name: string;
+  onDone: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const link = useMutation({
+    mutationFn: () => api.connectCredentials(provider, { username, password }),
+    onSuccess: () => {
+      setPassword('');
+      setOpen(false);
+      onDone();
+    },
+    onError: (e) =>
+      setError(e instanceof ApiError ? e.message : `${name} did not accept those details.`),
+  });
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!username.trim() || !password) {
+      setError('Enter your email and password.');
+      return;
+    }
+    link.mutate();
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-3 text-sm text-vermillion transition hover:text-vermillion-bright"
+      >
+        Sign in to {name}
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-3 space-y-2 border-t border-hairline pt-3">
+      <p className="text-xs text-ink-faint">
+        {name} has no third-party OAuth, so it takes your login directly. Your password is exchanged
+        for a token once and never stored.
+      </p>
+      <input
+        type="email"
+        autoComplete="username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        placeholder={`${name} email`}
+        className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
+      />
+      <input
+        type="password"
+        autoComplete="current-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
+      />
+      {error ? <p className="text-xs text-vermillion-bright">{error}</p> : null}
+      <div className="flex gap-2">
+        <Button type="submit" variant="primary" loading={link.isPending}>
+          Link {name}
+        </Button>
+        <Button type="button" variant="quiet" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }

@@ -8,8 +8,8 @@ export type ProviderMeta = {
   name: string;
   /** Which media domains this provider can supply. */
   media: MediaType[];
-  /** OAuth 2.0 flow used by the adapter. */
-  auth: 'oauth2-pkce' | 'oauth2' | 'api-key' | 'none';
+  /** How a user links this provider. */
+  auth: 'oauth2-pkce' | 'oauth2' | 'api-key' | 'password' | 'none';
   /** Published rate limit, used to seed the client side limiter. */
   rateLimit: { requestsPerMinute: number; burst: number };
   color: string;
@@ -43,10 +43,10 @@ export const PROVIDERS: Record<ProviderId, ProviderMeta> = {
     id: 'kitsu',
     name: 'Kitsu',
     media: ['anime', 'manga'],
-    auth: 'oauth2',
+    auth: 'password',
     rateLimit: { requestsPerMinute: 60, burst: 6 },
     color: '#f2542d',
-    status: 'stub',
+    status: 'live',
     docs: 'https://kitsu.docs.apiary.io',
   },
   tmdb: {

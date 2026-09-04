@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PROVIDERS, PROVIDER_IDS, type ProviderId } from '@kanzen/shared';
+import { PROVIDERS, PROVIDER_IDS, credentialsSchema, type ProviderId } from '@kanzen/shared';
 import { createPkcePair, createState } from '@kanzen/providers';
 import { demoMode, env } from '../env.js';
 import { getRedis } from '../redis/redis.js';
@@ -94,6 +94,65 @@ connectionsRouter.post(
     );
     const authUrl = await adapter.getAuthUrl({ state, pkce, redirectUri });
     res.json({ authUrl });
+  }),
+);
+
+// Password-grant providers (Kitsu) link without a redirect. The credentials are
+// forwarded to the provider once and never stored or logged.
+connectionsRouter.post(
+  '/:provider/credentials',
+  requireAuth,
+  blockDemoWrites,
+  asyncHandler(async (req, res) => {
+    const { provider } = req.params;
+    assertProvider(provider);
+    const adapter = registry.get(provider);
+
+    if (demoMode) {
+      const conn = await Connection.findOneAndUpdate(
+        { userId: req.auth!.userId, provider },
+        {
+          $set: {
+            encryptedTokens: encryptJson({ accessToken: 'demo' }),
+            handle: `${PROVIDERS[provider].name.toLowerCase()}-demo`,
+            status: 'active',
+            error: null,
+            demo: true,
+          },
+        },
+        { upsert: true, new: true },
+      );
+      await dispatchSync({ connection: conn, mode: 'full' });
+      return res.status(201).json({ connection: serializeConnection(conn, 0), synced: true });
+    }
+
+    if (!adapter.exchangeCredentials) {
+      throw badRequest(`${PROVIDERS[provider].name} does not support a password login.`);
+    }
+    const { username, password } = credentialsSchema.parse(req.body);
+
+    let linked;
+    try {
+      linked = await adapter.exchangeCredentials({ username, password });
+    } catch {
+      throw badRequest(`${PROVIDERS[provider].name} did not accept those details.`);
+    }
+
+    const conn = await Connection.findOneAndUpdate(
+      { userId: req.auth!.userId, provider },
+      {
+        $set: {
+          encryptedTokens: encryptJson(linked.tokens),
+          handle: linked.handle,
+          status: 'active',
+          error: null,
+          demo: false,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    await dispatchSync({ connection: conn, mode: 'full' });
+    res.status(201).json({ connection: serializeConnection(conn, 0), synced: true });
   }),
 );
 

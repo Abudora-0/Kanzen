@@ -91,6 +91,14 @@ export interface MediaProvider {
     verifier: string;
     redirectUri: string;
   }): Promise<{ tokens: TokenSet; handle: string | null }>;
+  /**
+   * For providers with no redirect OAuth (Kitsu). Trades a username and password
+   * for a token once; the password is never stored.
+   */
+  exchangeCredentials?(input: {
+    username: string;
+    password: string;
+  }): Promise<{ tokens: TokenSet; handle: string | null }>;
   refresh(tokens: TokenSet): Promise<TokenSet>;
   fetchLibrary(ctx: SyncContext, cursor?: string | null): Promise<Page<RawEntry>>;
   updateEntry(ctx: SyncContext, input: WritebackInput): Promise<void>;

@@ -128,6 +128,11 @@ export const api = {
       `/connections/${provider}/connect`,
       { method: 'POST' },
     ),
+  connectCredentials: (provider: string, body: { username: string; password: string }) =>
+    request<{ connection: ConnectionDto; synced: boolean }>(
+      `/connections/${provider}/credentials`,
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   disconnect: (provider: string) =>
     request<{ ok: true }>(`/connections/${provider}`, { method: 'DELETE' }),
 
