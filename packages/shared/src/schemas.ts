@@ -50,6 +50,15 @@ export const credentialsSchema = z.object({
   password: z.string().min(1).max(400),
 });
 
+export const workCoverSchema = z.object({
+  coverImage: z
+    .string()
+    .trim()
+    .url()
+    .max(2000)
+    .refine((v) => /^https:\/\//i.test(v), { message: 'Must be an https URL' }),
+});
+
 export const settingsSchema = z.object({
   reduceMotion: z.boolean().optional(),
   soundFx: z.boolean().optional(),
@@ -64,3 +73,4 @@ export type LibraryQuery = z.infer<typeof libraryQuerySchema>;
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type CredentialsInput = z.infer<typeof credentialsSchema>;
+export type WorkCoverInput = z.infer<typeof workCoverSchema>;

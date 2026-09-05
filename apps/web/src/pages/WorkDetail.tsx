@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ENTRY_STATUSES, PROGRESS_UNIT, STATUS_LABEL } from '@kanzen/shared';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
 import { Select } from '../components/ui/Select';
 import { Slider } from '../components/ui/Slider';
@@ -90,12 +90,15 @@ export function WorkDetail() {
           <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/92 to-surface/55" />
         </div>
         <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:p-7">
-          <CoverImage
-            src={work.coverImage}
-            alt={titleOf(work)}
-            type={work.type}
-            className="h-44 w-32 shrink-0 shadow-lift sm:h-52 sm:w-36"
-          />
+          <div className="relative h-44 w-32 shrink-0 sm:h-52 sm:w-36">
+            <CoverImage
+              src={work.coverImage}
+              alt={titleOf(work)}
+              type={work.type}
+              className="h-full w-full shadow-lift"
+            />
+            <CoverActions workId={work.id} coverImage={work.coverImage} title={titleOf(work)} />
+          </div>
           <div className="min-w-0">
             <p
               className="text-[0.7rem] uppercase tracking-[0.3em]"
@@ -259,6 +262,108 @@ export function WorkDetail() {
           ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CoverActions({
+  workId,
+  coverImage,
+  title,
+}: {
+  workId: string;
+  coverImage: string | null;
+  title: string;
+}) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [url, setUrl] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const setCover = useMutation({
+    mutationFn: () => api.setWorkCover(workId, url.trim()),
+    onSuccess: () => {
+      setEditing(false);
+      setUrl('');
+      qc.invalidateQueries({ queryKey: ['entry'] });
+      qc.invalidateQueries({ queryKey: ['library'] });
+      toast.show('Cover updated');
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not use that image URL.'),
+  });
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!url.trim()) {
+      setError('Paste an image URL.');
+      return;
+    }
+    setCover.mutate();
+  };
+
+  if (editing) {
+    return (
+      <div className="glass absolute inset-x-0 bottom-0 z-10 -mx-1 space-y-1.5 p-2">
+        <form onSubmit={submit} className="space-y-1.5">
+          <input
+            autoFocus
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://... image url"
+            className="w-full rounded-[8px] border border-hairline bg-surface/80 px-2 py-1 text-xs text-ink outline-none focus:border-vermillion"
+          />
+          {error ? <p className="text-[0.65rem] text-vermillion-bright">{error}</p> : null}
+          <div className="flex gap-1.5">
+            <Button
+              type="submit"
+              variant="primary"
+              className="!px-2 !py-1 text-xs"
+              loading={setCover.isPending}
+            >
+              Save
+            </Button>
+            <Button
+              type="button"
+              variant="quiet"
+              className="!px-2 !py-1 text-xs"
+              onClick={() => {
+                setEditing(false);
+                setError(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute bottom-1.5 right-1.5 z-10 flex gap-1">
+      {coverImage ? (
+        <a
+          href={coverImage}
+          download={`${title}-cover.jpg`}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Download cover"
+          title="Download cover"
+          className="grid h-7 w-7 place-items-center rounded-full border border-hairline-bright bg-night/80 text-ink backdrop-blur transition hover:border-vermillion"
+        >
+          <Icon name="download" size={14} />
+        </a>
+      ) : null}
+      <button
+        onClick={() => setEditing(true)}
+        aria-label={coverImage ? 'Change cover' : 'Add a cover'}
+        title={coverImage ? 'Change cover' : 'Add a cover'}
+        className="grid h-7 w-7 place-items-center rounded-full border border-hairline-bright bg-night/80 text-ink backdrop-blur transition hover:border-vermillion"
+      >
+        <Icon name="image" size={14} />
+      </button>
     </div>
   );
 }

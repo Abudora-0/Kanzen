@@ -3,6 +3,7 @@ import request from 'supertest';
 import type { Express } from 'express';
 import { User, Connection, Entry, Work } from './models/index.js';
 import { createApp } from './app.js';
+import { env } from './env.js';
 
 let app: Express;
 
@@ -76,5 +77,45 @@ describe('library', () => {
     expect(list.body.items.length).toBeGreaterThan(0);
     expect(list.body.total).toBeGreaterThan(0);
     expect(list.body.items[0].work.displayTitle).toBeTruthy();
+  });
+});
+
+describe('work cover', () => {
+  it('lets a real user contribute a cover, and rejects bad input', async () => {
+    const client = request.agent(app);
+    await client
+      .post('/api/auth/register')
+      .send({ email: 'cover@kanzen.test', password: 'constellation', displayName: 'Cover' });
+    await client.post('/api/connections/anilist/connect');
+    const { runSync } = await import('./sync/engine.js');
+    const conn = await Connection.findOne({ provider: 'anilist' }).sort({ createdAt: -1 });
+    await runSync({ connection: conn!, mode: 'full', syncRunId: '00000000000000000000000b' });
+
+    const list = await client.get('/api/library?pageSize=1');
+    const workId = list.body.items[0].work.id as string;
+
+    const bad = await client.patch(`/api/works/${workId}/cover`).send({ coverImage: 'not-a-url' });
+    expect(bad.status).toBe(422);
+
+    const good = await client
+      .patch(`/api/works/${workId}/cover`)
+      .send({ coverImage: 'https://example.com/cover.jpg' });
+    expect(good.status).toBe(200);
+    expect(good.body.work.coverImage).toBe('https://example.com/cover.jpg');
+  });
+
+  it('blocks the demo account from writing', async () => {
+    await User.create({
+      email: env.DEMO_EMAIL,
+      isDemo: true,
+      passwordHash: 'not-checked',
+      displayName: 'Demo',
+    });
+    const client = request.agent(app);
+    await client.post('/api/auth/demo');
+    const res = await client
+      .patch('/api/works/000000000000000000000000/cover')
+      .send({ coverImage: 'https://example.com/cover.jpg' });
+    expect(res.status).toBe(403);
   });
 });

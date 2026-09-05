@@ -4,9 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
 import { EmptyState } from '../components/EmptyState';
-import { Icon } from '../components/Icon';
+import { ProviderIcon } from '../components/ProviderIcon';
 import { useToast } from '../lib/toast';
-import { PROVIDER_COLOR, PROVIDER_ICON, relativeTime } from '../lib/utils';
+import { PROVIDER_COLOR, relativeTime } from '../lib/utils';
 
 export function Connections() {
   const qc = useQueryClient();
@@ -104,7 +104,7 @@ export function Connections() {
                       background: PROVIDER_COLOR[item.provider] ?? 'var(--color-vermillion)',
                     }}
                   >
-                    <Icon name={PROVIDER_ICON[item.provider] ?? 'spark'} size={17} />
+                    <ProviderIcon provider={item.provider} size={17} />
                   </span>
                   <div>
                     <p className="font-display text-ink">{item.meta.name}</p>

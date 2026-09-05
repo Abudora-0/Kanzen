@@ -64,6 +64,10 @@ libraryRouter.get(
   }),
 );
 
+// The graph has no client-side pagination (a force layout needs its whole
+// node set at once), so cap it server-side to keep large libraries fast.
+const GRAPH_NODE_LIMIT = 500;
+
 libraryRouter.get(
   '/graph',
   requireAuth,
@@ -73,30 +77,35 @@ libraryRouter.get(
     if (typeof req.query.type === 'string' && req.query.type) match.type = req.query.type;
     if (typeof req.query.status === 'string' && req.query.status) match.status = req.query.status;
 
-    const rows = await Entry.aggregate<{
-      _id: unknown;
-      workId: unknown;
-      status: string;
-      progress: number;
-      score: number | null;
-      title: string;
-      type: string;
-      relations: { work: unknown }[];
-    }>([
-      { $match: match },
-      { $lookup: { from: 'works', localField: 'workId', foreignField: '_id', as: 'work' } },
-      { $unwind: '$work' },
-      {
-        $project: {
-          workId: 1,
-          status: 1,
-          progress: 1,
-          score: 1,
-          type: 1,
-          title: '$work.displayTitle',
-          relations: '$work.relations',
+    const [totalMatching, rows] = await Promise.all([
+      Entry.countDocuments(match),
+      Entry.aggregate<{
+        _id: unknown;
+        workId: unknown;
+        status: string;
+        progress: number;
+        score: number | null;
+        title: string;
+        type: string;
+        relations: { work: unknown }[];
+      }>([
+        { $match: match },
+        { $sort: { updatedAt: -1 } },
+        { $limit: GRAPH_NODE_LIMIT },
+        { $lookup: { from: 'works', localField: 'workId', foreignField: '_id', as: 'work' } },
+        { $unwind: '$work' },
+        {
+          $project: {
+            workId: 1,
+            status: 1,
+            progress: 1,
+            score: 1,
+            type: 1,
+            title: '$work.displayTitle',
+            relations: '$work.relations',
+          },
         },
-      },
+      ]),
     ]);
 
     const idByWork = new Map(rows.map((r) => [String(r.workId), String(r._id)]));
@@ -117,7 +126,7 @@ libraryRouter.get(
         }
       }
     }
-    res.json({ nodes, links });
+    res.json({ nodes, links, total: totalMatching, capped: totalMatching > rows.length });
   }),
 );
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../lib/store';
@@ -37,8 +37,22 @@ export function AppShell() {
   const { theme, setTheme } = useTheme();
   const routeKey = location.pathname.split('/').slice(0, 3).join('/');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+    setUserMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!userMenuRef.current?.contains(e.target as Node)) setUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [userMenuOpen]);
 
   return (
     <div className="min-h-dvh pb-16 md:pb-0">
@@ -106,21 +120,59 @@ export function AppShell() {
                 syncing
               </span>
             ) : null}
-            <NavLink
-              to="/settings"
-              className="hidden text-sm text-ink-muted transition hover:text-ink md:block"
-            >
-              {user?.displayName?.split(' ')[0] ?? 'You'}
-            </NavLink>
-            <button
-              onClick={async () => {
-                await logout();
-                navigate('/');
-              }}
-              className="hidden text-xs text-ink-faint transition hover:text-vermillion md:block"
-            >
-              sign out
-            </button>
+            <div className="relative hidden md:block" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen((o) => !o)}
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm transition',
+                  userMenuOpen
+                    ? 'border-hairline-bright bg-surface text-ink'
+                    : 'border-transparent text-ink-muted hover:border-hairline hover:text-ink',
+                )}
+              >
+                {user?.displayName?.split(' ')[0] ?? 'You'}
+                <Icon
+                  name="chevron-down"
+                  size={13}
+                  className={cn('transition-transform', userMenuOpen && 'rotate-180')}
+                />
+              </button>
+              <AnimatePresence>
+                {userMenuOpen ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                    transition={{ duration: 0.14 }}
+                    role="menu"
+                    className="glass absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden p-1.5"
+                  >
+                    <p className="truncate px-2.5 py-1.5 text-xs text-ink-faint">
+                      {user?.isDemo ? 'demo workspace' : user?.email}
+                    </p>
+                    <NavLink
+                      to="/settings"
+                      role="menuitem"
+                      className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-ink-soft transition hover:bg-surface-2 hover:text-ink"
+                    >
+                      <Icon name="settings" size={16} /> Settings
+                    </NavLink>
+                    <button
+                      role="menuitem"
+                      onClick={async () => {
+                        await logout();
+                        navigate('/');
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm text-ink-muted transition hover:bg-vermillion/10 hover:text-vermillion"
+                    >
+                      <Icon name="external-link" size={16} /> Sign out
+                    </button>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
             <button
               onClick={() => setMenuOpen((o) => !o)}
               aria-label="Menu"

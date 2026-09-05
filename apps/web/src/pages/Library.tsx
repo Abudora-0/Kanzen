@@ -172,12 +172,19 @@ export function Library() {
       {view === 'constellation' ? (
         <Panel>
           {nodes.length > 2 ? (
-            <Constellation
-              nodes={nodes}
-              links={links}
-              height={520}
-              onSelect={(id) => navigate(`/library/${id}`)}
-            />
+            <>
+              <Constellation
+                nodes={nodes}
+                links={links}
+                height={520}
+                onSelect={(id) => navigate(`/library/${id}`)}
+              />
+              {graph.data?.capped ? (
+                <p className="mt-3 text-center text-xs text-ink-faint">
+                  Showing your {nodes.length} most recently updated titles of {graph.data.total}.
+                </p>
+              ) : null}
+            </>
           ) : (
             <p className="py-8 text-center text-sm text-ink-muted">
               Not enough titles in this filter to map.

@@ -95,6 +95,8 @@ export const api = {
         score: number | null;
       }[];
       links: { source: string; target: string; kind: string }[];
+      total: number;
+      capped: boolean;
     }>(`/library/graph?${q.toString()}`);
   },
   entry: (id: string) =>
@@ -110,6 +112,11 @@ export const api = {
     request<{ entry: EntryDto }>(`/entries/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(patch),
+    }),
+  setWorkCover: (workId: string, coverImage: string) =>
+    request<{ work: EntryDto['work'] }>(`/works/${workId}/cover`, {
+      method: 'PATCH',
+      body: JSON.stringify({ coverImage }),
     }),
   resolveConflict: (id: string, strategy: 'prefer-local' | 'prefer-remote' | 'prefer-furthest') =>
     request<{ entry: EntryDto }>(`/entries/${id}/resolve`, {

@@ -12,3 +12,14 @@ export const authRateLimit = rateLimit({
   skip: () => isTest,
   message: { error: 'too_many_requests', message: 'Too many attempts, try again later' },
 });
+
+/** Looser limiter for authenticated writes to shared (not per-user) data, like
+ * contributing a work's cover art, so a single account cannot spam the catalogue. */
+export const sharedWriteRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTest,
+  message: { error: 'too_many_requests', message: 'Too many changes, try again later' },
+});
