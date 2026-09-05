@@ -82,7 +82,7 @@ export type SyncRunDto = {
   id: string;
   provider: ProviderId;
   mode: 'full' | 'incremental';
-  state: 'queued' | 'running' | 'done' | 'failed';
+  state: 'queued' | 'running' | 'done' | 'failed' | 'cancelled';
   startedAt: string | null;
   finishedAt: string | null;
   stats: { fetched: number; created: number; updated: number; conflicts: number };

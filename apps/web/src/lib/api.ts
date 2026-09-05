@@ -148,6 +148,8 @@ export const api = {
 
   sync: (input: { provider?: string; mode?: 'full' | 'incremental' }) =>
     request<{ runs: SyncRunDto[] }>('/sync', { method: 'POST', body: JSON.stringify(input) }),
+  cancelSync: (runId: string) =>
+    request<{ run: SyncRunDto }>(`/sync/${runId}/cancel`, { method: 'POST' }),
   syncRuns: () => request<{ runs: SyncRunDto[] }>('/sync/runs'),
   syncStatus: () =>
     request<{

@@ -54,6 +54,15 @@ export function Connections() {
     },
     onError: () => toast.show('Sync could not start', 'error'),
   });
+  const cancelSync = useMutation({
+    mutationFn: (runId: string) => api.cancelSync(runId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sync-runs'] });
+      qc.invalidateQueries({ queryKey: ['sync-status'] });
+      toast.show('Cancelling sync');
+    },
+    onError: () => toast.show('Could not cancel that sync', 'error'),
+  });
 
   const handledConnect = useRef<string | null>(null);
   useEffect(() => {
@@ -209,12 +218,23 @@ export function Connections() {
                 <span className="text-ink-soft">
                   {run.provider} · {run.mode}
                 </span>
-                <span className="tabular text-xs text-ink-muted">
-                  {run.state}
-                  {run.state === 'done'
-                    ? ` · +${run.stats.created} / ${run.stats.updated} upd / ${run.stats.conflicts} conf`
-                    : ''}{' '}
-                  · {relativeTime(run.finishedAt ?? run.startedAt)}
+                <span className="flex items-center gap-2">
+                  <span className="tabular text-xs text-ink-muted">
+                    {run.state}
+                    {run.state === 'done'
+                      ? ` · +${run.stats.created} / ${run.stats.updated} upd / ${run.stats.conflicts} conf`
+                      : ''}{' '}
+                    · {relativeTime(run.finishedAt ?? run.startedAt)}
+                  </span>
+                  {run.state === 'queued' || run.state === 'running' ? (
+                    <button
+                      onClick={() => cancelSync.mutate(run.id)}
+                      disabled={cancelSync.isPending}
+                      className="text-xs text-ink-faint underline-offset-2 transition hover:text-vermillion hover:underline disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
                 </span>
               </li>
             ))}

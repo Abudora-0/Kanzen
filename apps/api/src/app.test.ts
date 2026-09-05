@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import type { Express } from 'express';
-import { User, Connection, Entry, Work } from './models/index.js';
+import { User, Connection, Entry, SyncRun, Work } from './models/index.js';
 import { createApp } from './app.js';
 import { env } from './env.js';
+import { encryptJson } from './crypto/tokenCipher.js';
 
 let app: Express;
 
@@ -117,5 +118,64 @@ describe('work cover', () => {
       .patch('/api/works/000000000000000000000000/cover')
       .send({ coverImage: 'https://example.com/cover.jpg' });
     expect(res.status).toBe(403);
+  });
+});
+
+describe('sync cancel', () => {
+  it('flags a running sync for cancellation, and leaves a finished one alone', async () => {
+    const client = request.agent(app);
+    await client
+      .post('/api/auth/register')
+      .send({ email: 'cancel@kanzen.test', password: 'constellation', displayName: 'Cancel' });
+    const me = await client.get('/api/auth/me');
+    const conn = await Connection.create({
+      userId: me.body.user.id,
+      provider: 'anilist',
+      encryptedTokens: encryptJson({ accessToken: 'demo' }),
+    });
+    const running = await SyncRun.create({
+      userId: me.body.user.id,
+      connectionId: conn._id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'running',
+    });
+    const done = await SyncRun.create({
+      userId: me.body.user.id,
+      connectionId: conn._id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'done',
+    });
+
+    const cancelRunning = await client.post(`/api/sync/${running._id}/cancel`);
+    expect(cancelRunning.status).toBe(200);
+    expect(cancelRunning.body.run.state).toBe('running');
+    expect((await SyncRun.findById(running._id))?.cancelRequested).toBe(true);
+
+    const cancelDone = await client.post(`/api/sync/${done._id}/cancel`);
+    expect(cancelDone.status).toBe(200);
+    expect((await SyncRun.findById(done._id))?.cancelRequested).toBe(false);
+  });
+
+  it('rejects cancelling a run that does not belong to you', async () => {
+    const owner = request.agent(app);
+    await owner
+      .post('/api/auth/register')
+      .send({ email: 'owner@kanzen.test', password: 'constellation', displayName: 'Owner' });
+    const ownerMe = await owner.get('/api/auth/me');
+    const run = await SyncRun.create({
+      userId: ownerMe.body.user.id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'running',
+    });
+
+    const intruder = request.agent(app);
+    await intruder
+      .post('/api/auth/register')
+      .send({ email: 'intruder@kanzen.test', password: 'constellation', displayName: 'Intruder' });
+    const res = await intruder.post(`/api/sync/${run._id}/cancel`);
+    expect(res.status).toBe(404);
   });
 });

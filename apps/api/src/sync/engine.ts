@@ -72,6 +72,7 @@ export async function runSync(opts: RunOptions): Promise<SyncStats> {
   stats.fetched = raws.length;
   const total = raws.length || 1;
   let done = 0;
+  let cancelled = false;
 
   // Each entry is a handful of sequential Mongo round trips; run them with
   // bounded concurrency so a real library does not blow past the serverless
@@ -80,6 +81,10 @@ export async function runSync(opts: RunOptions): Promise<SyncStats> {
   await Promise.all(
     raws.map((raw) =>
       entryLimiter.schedule(async () => {
+        // A separate request may have flagged this run for cancellation; a
+        // task not yet started skips its work, one already running finishes.
+        if (cancelled) return;
+
         const work = await resolveWork(raw.work);
         const outcome = await applyEntry(
           String(connection.userId),
@@ -102,10 +107,28 @@ export async function runSync(opts: RunOptions): Promise<SyncStats> {
             done,
             total,
           });
+          if (!cancelled) {
+            const fresh = await SyncRun.findById(syncRunId).select('cancelRequested').lean();
+            if (fresh?.cancelRequested) cancelled = true;
+          }
         }
       }),
     ),
   );
+
+  if (cancelled) {
+    await SyncRun.updateOne(
+      { _id: syncRunId },
+      { $set: { state: 'cancelled', finishedAt: new Date(), stats } },
+    );
+    await publishEvent(String(connection.userId), {
+      type: 'sync:state',
+      provider: connection.provider as ProviderId,
+      runId: syncRunId,
+      state: 'cancelled',
+    });
+    return stats;
+  }
 
   await linkRelations(raws.map((r) => r.work));
 

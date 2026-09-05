@@ -102,14 +102,7 @@ export function serializeSyncRun(run: SyncRunDoc): SyncRunDto {
     id: String(run._id),
     provider: run.provider,
     mode: run.mode,
-    state:
-      run.state === 'queued'
-        ? 'queued'
-        : run.state === 'running'
-          ? 'running'
-          : run.state === 'done'
-            ? 'done'
-            : 'failed',
+    state: run.state,
     startedAt: iso(run.startedAt),
     finishedAt: iso(run.finishedAt),
     stats: {

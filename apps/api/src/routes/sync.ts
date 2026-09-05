@@ -3,7 +3,7 @@ import { syncRequestSchema } from '@kanzen/shared';
 import { SyncRun, toObjectId } from '../models/index.js';
 import { Connection } from '../models/index.js';
 import { requireAuth, blockDemoWrites } from '../auth/middleware.js';
-import { asyncHandler, badRequest } from '../http/errors.js';
+import { asyncHandler, badRequest, notFound } from '../http/errors.js';
 import { serializeSyncRun } from '../dto/serialize.js';
 import { getQueues } from '../queue/queues.js';
 import { allLimiterSnapshots } from '../ratelimit/limiter.js';
@@ -29,6 +29,38 @@ syncRouter.post(
       runs.push(serializeSyncRun(fresh));
     }
     res.status(202).json({ runs });
+  }),
+);
+
+// Cancellation is cooperative: this just flags the run and (for the worker
+// path only) tries to drop an unstarted BullMQ job outright. The loop in
+// engine.ts polls the flag every ten entries and stops itself when it sees it,
+// whether it is running inline in this same request or in a worker process.
+syncRouter.post(
+  '/:id/cancel',
+  requireAuth,
+  blockDemoWrites,
+  asyncHandler(async (req, res) => {
+    const run = await SyncRun.findOne({ _id: req.params.id, userId: req.auth!.userId });
+    if (!run) throw notFound('Sync run not found');
+
+    if (run.state === 'queued' || run.state === 'running') {
+      run.cancelRequested = true;
+      if (run.state === 'queued' && run.jobId) {
+        try {
+          const job = await getQueues().sync.getJob(run.jobId);
+          if (job && !(await job.isActive())) {
+            await job.remove();
+            run.state = 'cancelled';
+            run.finishedAt = new Date();
+          }
+        } catch {
+          /* Redis unreachable; the flag still stops it once the worker starts. */
+        }
+      }
+      await run.save();
+    }
+    res.json({ run: serializeSyncRun(run) });
   }),
 );
 

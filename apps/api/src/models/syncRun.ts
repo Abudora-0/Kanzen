@@ -10,9 +10,11 @@ const syncRunSchema = new Schema(
     mode: { type: String, enum: ['full', 'incremental'], default: 'incremental' },
     state: {
       type: String,
-      enum: ['queued', 'running', 'done', 'failed'],
+      enum: ['queued', 'running', 'done', 'failed', 'cancelled'],
       default: 'queued',
     },
+    /** Set by the cancel route; the running loop polls this and stops cooperatively. */
+    cancelRequested: { type: Boolean, default: false },
     jobId: { type: String, default: null },
     startedAt: { type: Date, default: null },
     finishedAt: { type: Date, default: null },

@@ -50,6 +50,14 @@ export function Dashboard() {
       qc.invalidateQueries({ queryKey: ['insights'] });
     },
   });
+  const cancelSync = useMutation({
+    mutationFn: (runId: string) => api.cancelSync(runId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sync-runs'] });
+      toast.show('Cancelling sync');
+    },
+    onError: () => toast.show('Could not cancel that sync', 'error'),
+  });
 
   const totals = insights.data?.payload.totals;
   const { nodes, links } = useConstellationData(inProgress.data?.items ?? []);
@@ -172,11 +180,22 @@ export function Dashboard() {
               <span className="text-ink-soft">
                 {run.provider} · {run.mode}
               </span>
-              <span className="tabular text-xs text-ink-muted">
-                {run.state === 'done'
-                  ? `+${run.stats.created} new, ${run.stats.updated} updated, ${run.stats.conflicts} conflicts`
-                  : run.state}{' '}
-                · {relativeTime(run.finishedAt ?? run.startedAt)}
+              <span className="flex items-center gap-2">
+                <span className="tabular text-xs text-ink-muted">
+                  {run.state === 'done'
+                    ? `+${run.stats.created} new, ${run.stats.updated} updated, ${run.stats.conflicts} conflicts`
+                    : run.state}{' '}
+                  · {relativeTime(run.finishedAt ?? run.startedAt)}
+                </span>
+                {run.state === 'queued' || run.state === 'running' ? (
+                  <button
+                    onClick={() => cancelSync.mutate(run.id)}
+                    disabled={cancelSync.isPending}
+                    className="text-xs text-ink-faint underline-offset-2 transition hover:text-vermillion hover:underline disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                ) : null}
               </span>
             </li>
           ))}
