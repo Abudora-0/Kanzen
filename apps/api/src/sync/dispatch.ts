@@ -14,10 +14,11 @@ type DispatchInput = {
 
 /**
  * Inline syncs run inside a single Vercel function invocation, which is hard
- * killed at its execution time limit with no chance to update the SyncRun. A
- * run still "running" past this window cannot be real; it was killed.
+ * killed at its execution time limit (see the api/index.ts maxDuration in
+ * vercel.json) with no chance to update the SyncRun. A run still "running"
+ * past that limit plus a safety margin cannot be real; it was killed.
  */
-const STALE_RUN_MS = 90_000;
+const STALE_RUN_MS = 320_000;
 
 /** Mark runs the platform killed mid-flight as failed instead of leaving them
  * stuck "running" forever. Scoped by an arbitrary Mongo filter so callers can

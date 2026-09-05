@@ -54,7 +54,7 @@ describe('dispatchSync', () => {
       mode: 'incremental',
       state: 'running',
     });
-    await backdate(killed._id, 120_000); // past the 90s stale threshold
+    await backdate(killed._id, 400_000); // past the stale threshold
 
     const result = await dispatchSync({ connection: conn, mode: 'incremental' });
 
@@ -82,7 +82,7 @@ describe('reapStaleSyncRuns', () => {
       mode: 'incremental',
       state: 'queued',
     });
-    await backdate(stale._id, 120_000);
+    await backdate(stale._id, 400_000);
 
     await reapStaleSyncRuns({ userId: conn.userId });
 
