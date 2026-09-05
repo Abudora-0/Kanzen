@@ -63,7 +63,7 @@ export type LimiterSnapshot = {
 export const api = {
   register: (input: { email: string; password: string; displayName: string }) =>
     request<{ user: UserDto }>('/auth/register', { method: 'POST', body: JSON.stringify(input) }),
-  login: (input: { email: string; password: string }) =>
+  login: (input: { email: string; password: string; rememberMe?: boolean }) =>
     request<{ user: UserDto }>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
   demo: () => request<{ user: UserDto }>('/auth/demo', { method: 'POST' }),
   logout: () => request<{ ok: true }>('/auth/logout', { method: 'POST' }),

@@ -22,6 +22,7 @@ export function AuthPage() {
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [form, setForm] = useState({ email: '', password: '', displayName: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export function AuthPage() {
     try {
       const { user } =
         mode === 'login'
-          ? await api.login({ email: form.email, password: form.password })
+          ? await api.login({ email: form.email, password: form.password, rememberMe })
           : await api.register(form);
       setUser(user);
       navigate('/dashboard');
@@ -177,6 +178,18 @@ export function AuthPage() {
                 </button>
               }
             />
+
+            {mode === 'login' ? (
+              <label className="flex items-center gap-2 text-sm text-ink-muted">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-hairline accent-vermillion"
+                />
+                Remember me
+              </label>
+            ) : null}
 
             {error ? (
               <p className="rounded-md border border-vermillion/30 bg-vermillion/10 px-3 py-2 text-sm text-vermillion-bright">

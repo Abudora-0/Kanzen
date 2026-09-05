@@ -51,6 +51,36 @@ describe('auth flow', () => {
     const res = await request(app).post('/api/auth/register').send({ email: 'nope' });
     expect(res.status).toBe(422);
   });
+
+  it('extends the refresh cookie lifetime for remember me, and keeps it long across a refresh', async () => {
+    const client = agent();
+    await client.post('/api/auth/register').send({
+      email: 'remember@kanzen.test',
+      password: 'constellation',
+      displayName: 'Remember',
+    });
+    await client.post('/api/auth/logout');
+
+    const login = await client.post('/api/auth/login').send({
+      email: 'remember@kanzen.test',
+      password: 'constellation',
+      rememberMe: true,
+    });
+    expect(login.status).toBe(200);
+    const loginCookie = login.headers['set-cookie'].find((c: string) =>
+      c.startsWith('kanzen_refresh'),
+    );
+    const loginMaxAge = Number(/Max-Age=(\d+)/.exec(loginCookie)?.[1]);
+    expect(loginMaxAge).toBeGreaterThan(60 * 60 * 24 * 8); // well past the 7-day default
+
+    const refresh = await client.post('/api/auth/refresh');
+    expect(refresh.status).toBe(200);
+    const refreshCookie = refresh.headers['set-cookie'].find((c: string) =>
+      c.startsWith('kanzen_refresh'),
+    );
+    const refreshMaxAge = Number(/Max-Age=(\d+)/.exec(refreshCookie)?.[1]);
+    expect(refreshMaxAge).toBeGreaterThan(60 * 60 * 24 * 8);
+  });
 });
 
 describe('library', () => {

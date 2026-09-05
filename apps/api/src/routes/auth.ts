@@ -40,7 +40,11 @@ authRouter.post(
     }
     user.lastSeenAt = new Date();
     await user.save();
-    setAuthCookies(res, { sub: String(user._id), isDemo: Boolean(user.isDemo) });
+    setAuthCookies(res, {
+      sub: String(user._id),
+      isDemo: Boolean(user.isDemo),
+      remember: body.rememberMe,
+    });
     res.json({ user: serializeUser(user) });
   }),
 );
@@ -65,7 +69,11 @@ authRouter.post(
       const payload = verifyRefresh(token);
       const user = await User.findById(payload.sub);
       if (!user) throw unauthorized('Account no longer exists');
-      setAuthCookies(res, { sub: String(user._id), isDemo: Boolean(user.isDemo) });
+      setAuthCookies(res, {
+        sub: String(user._id),
+        isDemo: Boolean(user.isDemo),
+        remember: payload.remember,
+      });
       res.json({ user: serializeUser(user) });
     } catch {
       clearAuthCookies(res);
