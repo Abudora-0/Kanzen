@@ -1,12 +1,19 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import type { Express } from 'express';
-import { User, Connection, Entry, SyncRun, Work } from './models/index.js';
+import { User, Connection, Entry, SyncRun, Work, PasswordResetToken } from './models/index.js';
 import { createApp } from './app.js';
 import { env } from './env.js';
 import { encryptJson } from './crypto/tokenCipher.js';
 
 let app: Express;
+
+/** supertest types Set-Cookie as string | undefined even though it is always
+ * an array in practice; narrow it once here instead of at every call site. */
+function findCookie(headers: Record<string, unknown>, name: string): string | undefined {
+  const raw = headers['set-cookie'] as string[] | undefined;
+  return raw?.find((c) => c.startsWith(name));
+}
 
 beforeAll(async () => {
   await Promise.all([
@@ -67,19 +74,88 @@ describe('auth flow', () => {
       rememberMe: true,
     });
     expect(login.status).toBe(200);
-    const loginCookie = login.headers['set-cookie'].find((c: string) =>
-      c.startsWith('kanzen_refresh'),
-    );
-    const loginMaxAge = Number(/Max-Age=(\d+)/.exec(loginCookie)?.[1]);
+    const loginCookie = findCookie(login.headers, 'kanzen_refresh');
+    const loginMaxAge = Number(/Max-Age=(\d+)/.exec(loginCookie ?? '')?.[1]);
     expect(loginMaxAge).toBeGreaterThan(60 * 60 * 24 * 8); // well past the 7-day default
 
     const refresh = await client.post('/api/auth/refresh');
     expect(refresh.status).toBe(200);
-    const refreshCookie = refresh.headers['set-cookie'].find((c: string) =>
-      c.startsWith('kanzen_refresh'),
-    );
-    const refreshMaxAge = Number(/Max-Age=(\d+)/.exec(refreshCookie)?.[1]);
+    const refreshCookie = findCookie(refresh.headers, 'kanzen_refresh');
+    const refreshMaxAge = Number(/Max-Age=(\d+)/.exec(refreshCookie ?? '')?.[1]);
     expect(refreshMaxAge).toBeGreaterThan(60 * 60 * 24 * 8);
+  });
+
+  it('creates a hashed reset token for a real email, and nothing for an unknown one', async () => {
+    await request(app).post('/api/auth/register').send({
+      email: 'forgot@kanzen.test',
+      password: 'constellation',
+      displayName: 'Forgot',
+    });
+
+    const known = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'forgot@kanzen.test' });
+    expect(known.status).toBe(200);
+    expect(known.body.ok).toBe(true);
+    const user = await User.findOne({ email: 'forgot@kanzen.test' });
+    const token = await PasswordResetToken.findOne({ userId: user!._id });
+    expect(token).not.toBeNull();
+    expect(token!.expiresAt.getTime()).toBeGreaterThan(Date.now());
+
+    const unknown = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'nobody-here@kanzen.test' });
+    expect(unknown.status).toBe(200);
+    expect(unknown.body.ok).toBe(true);
+    expect(await PasswordResetToken.countDocuments({})).toBe(1);
+  });
+
+  it('resets the password with a valid token, and rejects reuse or an expired one', async () => {
+    await request(app).post('/api/auth/register').send({
+      email: 'resetme@kanzen.test',
+      password: 'constellation',
+      displayName: 'Reset',
+    });
+    const user = await User.findOne({ email: 'resetme@kanzen.test' });
+
+    const rawToken = 'a'.repeat(64);
+    const { createHash } = await import('node:crypto');
+    await PasswordResetToken.create({
+      userId: user!._id,
+      tokenHash: createHash('sha256').update(rawToken).digest('hex'),
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    const badToken = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'not-a-real-token', password: 'brandnewpass' });
+    expect(badToken.status).toBe(400);
+
+    const reset = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: rawToken, password: 'brandnewpass' });
+    expect(reset.status).toBe(200);
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'resetme@kanzen.test', password: 'brandnewpass' });
+    expect(login.status).toBe(200);
+
+    const reuse = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: rawToken, password: 'anotherpass' });
+    expect(reuse.status).toBe(400);
+
+    const expiredRawToken = 'b'.repeat(64);
+    await PasswordResetToken.create({
+      userId: user!._id,
+      tokenHash: createHash('sha256').update(expiredRawToken).digest('hex'),
+      expiresAt: new Date(Date.now() - 1000),
+    });
+    const expired = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: expiredRawToken, password: 'yetanotherpass' });
+    expect(expired.status).toBe(400);
   });
 });
 

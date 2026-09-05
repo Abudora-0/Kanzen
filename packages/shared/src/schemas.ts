@@ -18,6 +18,15 @@ export const loginSchema = z.object({
   rememberMe: z.boolean().default(false),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: passwordSchema,
+});
+
 export const entryUpdateSchema = z
   .object({
     status: z.enum(ENTRY_STATUSES).optional(),

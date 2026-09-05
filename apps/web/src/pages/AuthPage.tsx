@@ -20,7 +20,7 @@ export function AuthPage() {
   const setUser = useAuth((s) => s.setUser);
   const existing = useAuth((s) => s.user);
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [form, setForm] = useState({ email: '', password: '', displayName: '' });
   const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -28,6 +28,7 @@ export function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'form' | 'demo' | null>(null);
   const [line, setLine] = useState(0);
+  const [forgotSent, setForgotSent] = useState(false);
 
   useEffect(() => {
     if (existing) navigate('/dashboard', { replace: true });
@@ -44,6 +45,23 @@ export function AuthPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (mode === 'forgot') {
+      setTouched((t) => ({ ...t, email: true }));
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) return;
+      setBusy('form');
+      setError(null);
+      try {
+        await api.forgotPassword(form.email);
+      } catch {
+        // The backend already responds generically either way; a network
+        // failure still shows the same message so nothing about the
+        // account's existence leaks from the client's behavior either.
+      } finally {
+        setForgotSent(true);
+        setBusy(null);
+      }
+      return;
+    }
     setTouched({ email: true, password: true, displayName: true });
     if (
       !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email) ||
@@ -131,96 +149,159 @@ export function AuthPage() {
           </Link>
 
           <h1 className="font-display text-2xl text-ink">
-            {mode === 'login' ? 'Welcome back' : 'Make an account'}
+            {mode === 'login'
+              ? 'Welcome back'
+              : mode === 'register'
+                ? 'Make an account'
+                : 'Reset your password'}
           </h1>
           <p className="mt-1 text-sm text-ink-muted">
             {mode === 'login'
               ? 'Your library is where you left it.'
-              : 'Make an account, then connect your first tracker.'}
+              : mode === 'register'
+                ? 'Make an account, then connect your first tracker.'
+                : "Enter your email and we'll send you a reset link."}
           </p>
 
-          <form onSubmit={submit} className="mt-6 space-y-3.5">
-            {mode === 'register' ? (
+          {mode === 'forgot' && forgotSent ? (
+            <div className="mt-6 space-y-4">
+              <p className="rounded-md border border-aurora-teal/30 bg-aurora-teal/10 px-3 py-2 text-sm text-aurora-teal">
+                If an account exists for {form.email}, a reset link is on its way.
+              </p>
+              <button
+                className="w-full text-center text-sm text-ink-muted transition hover:text-ink"
+                onClick={() => {
+                  setMode('login');
+                  setForgotSent(false);
+                }}
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="mt-6 space-y-3.5">
+              {mode === 'register' ? (
+                <Field
+                  label="Display name"
+                  value={form.displayName}
+                  onChange={(v) => setForm((f) => ({ ...f, displayName: v }))}
+                  onBlur={() => setTouched((t) => ({ ...t, displayName: true }))}
+                  placeholder="Kanzen Explorer"
+                  error={nameBad ? 'Enter a name' : undefined}
+                />
+              ) : null}
               <Field
-                label="Display name"
-                value={form.displayName}
-                onChange={(v) => setForm((f) => ({ ...f, displayName: v }))}
-                onBlur={() => setTouched((t) => ({ ...t, displayName: true }))}
-                placeholder="Kanzen Explorer"
-                error={nameBad ? 'Enter a name' : undefined}
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={(v) => setForm((f) => ({ ...f, email: v }))}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                placeholder="name@example.com"
+                error={emailBad ? 'Enter a valid email' : undefined}
               />
-            ) : null}
-            <Field
-              label="Email"
-              type="email"
-              value={form.email}
-              onChange={(v) => setForm((f) => ({ ...f, email: v }))}
-              onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-              placeholder="name@example.com"
-              error={emailBad ? 'Enter a valid email' : undefined}
-            />
-            <Field
-              label="Password"
-              type={showPw ? 'text' : 'password'}
-              value={form.password}
-              onChange={(v) => setForm((f) => ({ ...f, password: v }))}
-              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-              placeholder={mode === 'register' ? 'at least 8 characters' : 'your password'}
-              error={pwBad ? 'At least 8 characters' : undefined}
-              trailing={
+              {mode !== 'forgot' ? (
+                <Field
+                  label="Password"
+                  type={showPw ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(v) => setForm((f) => ({ ...f, password: v }))}
+                  onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                  placeholder={mode === 'register' ? 'at least 8 characters' : 'your password'}
+                  error={pwBad ? 'At least 8 characters' : undefined}
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((s) => !s)}
+                      className="text-ink-faint transition hover:text-ink"
+                      aria-label={showPw ? 'Hide password' : 'Show password'}
+                    >
+                      <Icon name={showPw ? 'eye-off' : 'eye'} size={16} />
+                    </button>
+                  }
+                />
+              ) : null}
+
+              {mode === 'login' ? (
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm text-ink-muted">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 rounded border-hairline accent-vermillion"
+                    />
+                    Remember me
+                  </label>
+                  <button
+                    type="button"
+                    className="text-sm text-ink-muted transition hover:text-ink"
+                    onClick={() => {
+                      setMode('forgot');
+                      setError(null);
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              ) : null}
+
+              {error ? (
+                <p className="rounded-md border border-vermillion/30 bg-vermillion/10 px-3 py-2 text-sm text-vermillion-bright">
+                  {error}
+                </p>
+              ) : null}
+
+              <Button type="submit" variant="primary" loading={busy === 'form'} className="w-full">
+                {mode === 'login'
+                  ? 'Sign in'
+                  : mode === 'register'
+                    ? 'Create account'
+                    : 'Send reset link'}
+              </Button>
+
+              {mode === 'forgot' ? (
                 <button
                   type="button"
-                  onClick={() => setShowPw((s) => !s)}
-                  className="text-ink-faint transition hover:text-ink"
-                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                  className="w-full text-center text-sm text-ink-muted transition hover:text-ink"
+                  onClick={() => {
+                    setMode('login');
+                    setError(null);
+                  }}
                 >
-                  <Icon name={showPw ? 'eye-off' : 'eye'} size={16} />
+                  Back to sign in
                 </button>
-              }
-            />
+              ) : null}
+            </form>
+          )}
 
-            {mode === 'login' ? (
-              <label className="flex items-center gap-2 text-sm text-ink-muted">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-hairline accent-vermillion"
-                />
-                Remember me
-              </label>
-            ) : null}
+          {mode === 'forgot' ? null : (
+            <>
+              <div className="my-5 flex items-center gap-3 text-[0.7rem] uppercase tracking-widest text-ink-faint">
+                <span className="h-px flex-1 bg-hairline" />
+                or
+                <span className="h-px flex-1 bg-hairline" />
+              </div>
 
-            {error ? (
-              <p className="rounded-md border border-vermillion/30 bg-vermillion/10 px-3 py-2 text-sm text-vermillion-bright">
-                {error}
-              </p>
-            ) : null}
+              <Button
+                variant="ghost"
+                onClick={enterDemo}
+                loading={busy === 'demo'}
+                className="w-full"
+              >
+                Explore the demo
+              </Button>
 
-            <Button type="submit" variant="primary" loading={busy === 'form'} className="w-full">
-              {mode === 'login' ? 'Sign in' : 'Create account'}
-            </Button>
-          </form>
-
-          <div className="my-5 flex items-center gap-3 text-[0.7rem] uppercase tracking-widest text-ink-faint">
-            <span className="h-px flex-1 bg-hairline" />
-            or
-            <span className="h-px flex-1 bg-hairline" />
-          </div>
-
-          <Button variant="ghost" onClick={enterDemo} loading={busy === 'demo'} className="w-full">
-            Explore the demo
-          </Button>
-
-          <button
-            className="mt-5 w-full text-center text-sm text-ink-muted transition hover:text-ink"
-            onClick={() => {
-              setMode(mode === 'login' ? 'register' : 'login');
-              setError(null);
-            }}
-          >
-            {mode === 'login' ? 'Need an account? Sign up' : 'Have an account? Sign in'}
-          </button>
+              <button
+                className="mt-5 w-full text-center text-sm text-ink-muted transition hover:text-ink"
+                onClick={() => {
+                  setMode(mode === 'login' ? 'register' : 'login');
+                  setError(null);
+                }}
+              >
+                {mode === 'login' ? 'Need an account? Sign up' : 'Have an account? Sign in'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,9 @@ import { AppShell } from './components/AppShell';
 // pair stays separate from the much heavier authenticated app pages).
 const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
+const ResetPassword = lazy(() =>
+  import('./pages/ResetPassword').then((m) => ({ default: m.ResetPassword })),
+);
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Library = lazy(() => import('./pages/Library').then((m) => ({ default: m.Library })));
 const WorkDetail = lazy(() =>
@@ -56,6 +59,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/enter" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             element={
               <Protected>
