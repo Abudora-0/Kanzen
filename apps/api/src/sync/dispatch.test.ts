@@ -89,4 +89,21 @@ describe('reapStaleSyncRuns', () => {
     expect((await SyncRun.findById(fresh._id))?.state).toBe('running');
     expect((await SyncRun.findById(stale._id))?.state).toBe('failed');
   });
+
+  it('never reaps a worker-dispatched run, however stale, since it has no external kill', async () => {
+    const { conn } = await freshConnection();
+    const workerRun = await SyncRun.create({
+      userId: conn.userId,
+      connectionId: conn._id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'running',
+      jobId: 'sync:some-run-id',
+    });
+    await backdate(workerRun._id, 10_000_000);
+
+    await reapStaleSyncRuns({ userId: conn.userId });
+
+    expect((await SyncRun.findById(workerRun._id))?.state).toBe('running');
+  });
 });

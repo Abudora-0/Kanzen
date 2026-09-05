@@ -13,20 +13,25 @@ type DispatchInput = {
 };
 
 /**
- * Inline syncs run inside a single Vercel function invocation, which is hard
- * killed at its execution time limit (see the api/index.ts maxDuration in
- * vercel.json) with no chance to update the SyncRun. A run still "running"
- * past that limit plus a safety margin cannot be real; it was killed.
+ * Inline syncs (no jobId) run inside a single Vercel function invocation,
+ * which is hard killed at its execution time limit (see the api/index.ts
+ * maxDuration in vercel.json) with no chance to update the SyncRun. A run
+ * still "running" past that limit plus a safety margin cannot be real; it
+ * was killed. Worker-dispatched runs (jobId set) are excluded: they have no
+ * such external kill, and BullMQ's own attempts/backoff plus processSync's
+ * failure handling (apps/api/src/worker/run.ts) already settle them.
  */
 const STALE_RUN_MS = 320_000;
 
-/** Mark runs the platform killed mid-flight as failed instead of leaving them
- * stuck "running" forever. Scoped by an arbitrary Mongo filter so callers can
- * reap for one connection (before dispatching) or a whole user (on page load). */
+/** Mark inline runs the platform killed mid-flight as failed instead of
+ * leaving them stuck "running" forever. Scoped by an arbitrary Mongo filter
+ * so callers can reap for one connection (before dispatching) or a whole
+ * user (on page load). */
 export async function reapStaleSyncRuns(filter: Record<string, unknown>): Promise<void> {
   await SyncRun.updateMany(
     {
       ...filter,
+      jobId: null,
       state: { $in: ['queued', 'running'] },
       updatedAt: { $lt: new Date(Date.now() - STALE_RUN_MS) },
     },
@@ -70,10 +75,14 @@ export async function dispatchSync({ connection, mode }: DispatchInput) {
       provider: connection.provider as ProviderId,
       mode,
       syncRunId,
-    }).catch(async (err) => {
-      logger.warn({ err: (err as Error).message }, 'enqueue failed, running sync inline');
-      await runInline(connection, mode, syncRunId);
-    });
+    })
+      .then(async (job) => {
+        await SyncRun.updateOne({ _id: syncRunId }, { $set: { jobId: job.id ?? null } });
+      })
+      .catch(async (err) => {
+        logger.warn({ err: (err as Error).message }, 'enqueue failed, running sync inline');
+        await runInline(connection, mode, syncRunId);
+      });
     return run;
   }
 
