@@ -305,38 +305,40 @@ function CoverActions({
 
   if (editing) {
     return (
-      <div className="glass absolute inset-x-0 bottom-0 z-10 -mx-1 space-y-1.5 p-2">
-        <form onSubmit={submit} className="space-y-1.5">
-          <input
-            autoFocus
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://... image url"
-            className="w-full rounded-[8px] border border-hairline bg-surface/80 px-2 py-1 text-xs text-ink outline-none focus:border-vermillion"
-          />
-          {error ? <p className="text-[0.65rem] text-vermillion-bright">{error}</p> : null}
-          <div className="flex gap-1.5">
-            <Button
-              type="submit"
-              variant="primary"
-              className="!px-2 !py-1 text-xs"
-              loading={setCover.isPending}
-            >
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="quiet"
-              className="!px-2 !py-1 text-xs"
-              onClick={() => {
-                setEditing(false);
-                setError(null);
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+      <div className="absolute inset-x-0 bottom-0 z-10 -mx-1">
+        <div className="glass space-y-1.5 p-2">
+          <form onSubmit={submit} className="space-y-1.5">
+            <input
+              autoFocus
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://... image url"
+              className="w-full rounded-[8px] border border-hairline bg-surface/80 px-2 py-1 text-xs text-ink outline-none focus:border-vermillion"
+            />
+            {error ? <p className="text-[0.65rem] text-vermillion-bright">{error}</p> : null}
+            <div className="flex gap-1.5">
+              <Button
+                type="submit"
+                variant="primary"
+                className="!px-2 !py-1 text-xs"
+                loading={setCover.isPending}
+              >
+                Save
+              </Button>
+              <Button
+                type="button"
+                variant="quiet"
+                className="!px-2 !py-1 text-xs"
+                onClick={() => {
+                  setEditing(false);
+                  setError(null);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }

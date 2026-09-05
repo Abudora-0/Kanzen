@@ -146,29 +146,30 @@ export function AppShell() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.98 }}
                     transition={{ duration: 0.14 }}
-                    role="menu"
-                    className="glass absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden p-1.5"
+                    className="absolute right-0 top-full z-40 mt-2 w-48"
                   >
-                    <p className="truncate px-2.5 py-1.5 text-xs text-ink-faint">
-                      {user?.isDemo ? 'demo workspace' : user?.email}
-                    </p>
-                    <NavLink
-                      to="/settings"
-                      role="menuitem"
-                      className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-ink-soft transition hover:bg-surface-2 hover:text-ink"
-                    >
-                      <Icon name="settings" size={16} /> Settings
-                    </NavLink>
-                    <button
-                      role="menuitem"
-                      onClick={async () => {
-                        await logout();
-                        navigate('/');
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm text-ink-muted transition hover:bg-vermillion/10 hover:text-vermillion"
-                    >
-                      <Icon name="external-link" size={16} /> Sign out
-                    </button>
+                    <div role="menu" className="glass overflow-hidden p-1.5">
+                      <p className="truncate px-2.5 py-1.5 text-xs text-ink-faint">
+                        {user?.isDemo ? 'demo workspace' : user?.email}
+                      </p>
+                      <NavLink
+                        to="/settings"
+                        role="menuitem"
+                        className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-ink-soft transition hover:bg-surface-2 hover:text-ink"
+                      >
+                        <Icon name="settings" size={16} /> Settings
+                      </NavLink>
+                      <button
+                        role="menuitem"
+                        onClick={async () => {
+                          await logout();
+                          navigate('/');
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm text-ink-muted transition hover:bg-vermillion/10 hover:text-vermillion"
+                      >
+                        <Icon name="external-link" size={16} /> Sign out
+                      </button>
+                    </div>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
