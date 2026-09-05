@@ -21,6 +21,9 @@ export function SyncPulse({ pulse }: Props) {
 
   const limiters: LimiterSnapshot[] = data?.limiters ?? [];
   const queue = data?.queue ?? { waiting: 0, active: 0, delayed: 0, failed: 0 };
+  const activeRuns = Object.entries(pulse.runs).filter(
+    ([, r]) => r.state === 'running' || r.state === 'queued',
+  );
   const size = 210;
   const cx = size / 2;
 
@@ -102,6 +105,19 @@ export function SyncPulse({ pulse }: Props) {
           })}
         </svg>
       </div>
+
+      {activeRuns.length > 0 ? (
+        <div className="mt-4 space-y-1 border-b border-hairline pb-3 text-xs">
+          {activeRuns.map(([runId, run]) => (
+            <div key={runId} className="flex items-center justify-between">
+              <span className="text-ink-soft">{run.provider}</span>
+              <span className="tabular text-ink-muted">
+                {run.total > 0 ? `${run.done} / ${run.total}` : run.state}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-4 space-y-1.5 text-xs">
         {limiters.map((lim) => (

@@ -48,7 +48,7 @@ export function useSyncStream(enabled: boolean) {
             state: event.state,
           };
           next.runs[event.runId] = { ...existing, state: event.state };
-          if (event.state === 'done' || event.state === 'failed') {
+          if (event.state === 'done' || event.state === 'failed' || event.state === 'cancelled') {
             setTimeout(() => {
               setState((s) => {
                 const runs = { ...s.runs };

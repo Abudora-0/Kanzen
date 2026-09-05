@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../lib/store';
 import { useTheme, type ThemeChoice } from '../lib/theme';
-import { useSyncStream } from '../lib/stream';
+import { useSyncStream, type SyncPulseState } from '../lib/stream';
 import { KanzenMark } from './KanzenMark';
 import { Footer } from './Footer';
 import { CommandPalette } from './CommandPalette';
@@ -29,11 +29,23 @@ const THEME_ICON: Record<ThemeChoice, string> = {
   dark: 'moon',
 };
 
+/** Aggregate done/total across every running sync into one percentage, or
+ * null when no run has reported a real total yet (e.g. still queued). */
+function aggregateSyncProgress(pulse: SyncPulseState): number | null {
+  const running = Object.values(pulse.runs).filter((r) => r.state === 'running' && r.total > 0);
+  if (running.length === 0) return null;
+  const done = running.reduce((sum, r) => sum + r.done, 0);
+  const total = running.reduce((sum, r) => sum + r.total, 0);
+  if (total === 0) return null;
+  return Math.min(100, Math.round((done / total) * 100));
+}
+
 export function AppShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pulse = useSyncStream(Boolean(user));
+  const syncProgress = aggregateSyncProgress(pulse);
   const { theme, setTheme } = useTheme();
   const routeKey = location.pathname.split('/').slice(0, 3).join('/');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -117,7 +129,7 @@ export function AppShell() {
             {pulse.active ? (
               <span className="hidden items-center gap-1.5 rounded-full border border-aurora-teal/40 bg-aurora-teal/10 px-2 py-0.5 text-[0.7rem] text-aurora-teal sm:inline-flex">
                 <span className="km-spinner h-2.5 w-2.5" aria-hidden />
-                syncing
+                {syncProgress != null ? `syncing - ${syncProgress}%` : 'syncing'}
               </span>
             ) : null}
             <div className="relative hidden md:block" ref={userMenuRef}>
@@ -185,10 +197,10 @@ export function AppShell() {
         </div>
         {pulse.active ? (
           <motion.div
-            layout
             className="h-0.5 bg-gradient-to-r from-aurora-teal via-aurora-violet to-vermillion"
             initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
+            animate={{ scaleX: syncProgress != null ? syncProgress / 100 : 1 }}
+            transition={{ type: 'spring', stiffness: 120, damping: 20 }}
             style={{ transformOrigin: 'left' }}
           />
         ) : null}

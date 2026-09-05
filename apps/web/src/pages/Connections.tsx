@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api';
+import type { SyncPulseState } from '../lib/stream';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
 import { EmptyState } from '../components/EmptyState';
 import { ProviderIcon } from '../components/ProviderIcon';
@@ -23,6 +24,7 @@ const CREDENTIALS_AUTH = new Set(['password', 'token']);
 export function Connections() {
   const qc = useQueryClient();
   const toast = useToast();
+  const pulse = useOutletContext<SyncPulseState>();
   const [params, setParams] = useSearchParams();
   const { data, isLoading } = useQuery({ queryKey: ['connections'], queryFn: api.connections });
   const runs = useQuery({ queryKey: ['sync-runs'], queryFn: api.syncRuns, refetchInterval: 4000 });
@@ -210,36 +212,52 @@ export function Connections() {
           />
         ) : (
           <ul className="space-y-1.5 text-sm">
-            {(runs.data?.runs ?? []).map((run) => (
-              <li key={run.id} className="py-0.5">
-                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                  <span className="text-ink-soft">
-                    {run.provider} · {run.mode}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <span className="tabular text-xs text-ink-muted">
-                      {run.state}
-                      {run.state === 'done'
-                        ? ` · +${run.stats.created} / ${run.stats.updated} upd / ${run.stats.conflicts} conf`
-                        : ''}{' '}
-                      · {relativeTime(run.finishedAt ?? run.startedAt)}
+            {(runs.data?.runs ?? []).map((run) => {
+              const live = pulse.runs[run.id];
+              const isActive = run.state === 'queued' || run.state === 'running';
+              return (
+                <li key={run.id} className="py-0.5">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <span className="text-ink-soft">
+                      {run.provider} · {run.mode}
                     </span>
-                    {run.state === 'queued' || run.state === 'running' ? (
-                      <button
-                        onClick={() => cancelSync.mutate(run.id)}
-                        disabled={cancelSync.isPending}
-                        className="text-xs text-ink-faint underline-offset-2 transition hover:text-vermillion hover:underline disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
-                    ) : null}
-                  </span>
-                </div>
-                {run.state === 'failed' && run.error ? (
-                  <p className="mt-0.5 text-xs text-vermillion-bright">{run.error}</p>
-                ) : null}
-              </li>
-            ))}
+                    <span className="flex items-center gap-2">
+                      <span className="tabular text-xs text-ink-muted">
+                        {isActive && live && live.total > 0
+                          ? `${live.done} / ${live.total}`
+                          : run.state}
+                        {run.state === 'done'
+                          ? ` · +${run.stats.created} / ${run.stats.updated} upd / ${run.stats.conflicts} conf`
+                          : ''}{' '}
+                        · {relativeTime(run.finishedAt ?? run.startedAt)}
+                      </span>
+                      {isActive ? (
+                        <button
+                          onClick={() => cancelSync.mutate(run.id)}
+                          disabled={cancelSync.isPending}
+                          className="text-xs text-ink-faint underline-offset-2 transition hover:text-vermillion hover:underline disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      ) : null}
+                    </span>
+                  </div>
+                  {isActive && live && live.total > 0 ? (
+                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-2">
+                      <div
+                        className="h-full rounded-full bg-aurora-teal transition-[width]"
+                        style={{
+                          width: `${Math.min(100, Math.round((live.done / live.total) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  {run.state === 'failed' && run.error ? (
+                    <p className="mt-0.5 text-xs text-vermillion-bright">{run.error}</p>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </Panel>
