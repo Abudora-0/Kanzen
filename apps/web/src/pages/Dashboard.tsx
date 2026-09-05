@@ -173,30 +173,32 @@ export function Dashboard() {
         <SectionTitle eyebrow="history">Recent sync runs</SectionTitle>
         <ul className="space-y-1.5 text-sm">
           {(runs.data?.runs ?? []).slice(0, 6).map((run) => (
-            <li
-              key={run.id}
-              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
-            >
-              <span className="text-ink-soft">
-                {run.provider} · {run.mode}
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="tabular text-xs text-ink-muted">
-                  {run.state === 'done'
-                    ? `+${run.stats.created} new, ${run.stats.updated} updated, ${run.stats.conflicts} conflicts`
-                    : run.state}{' '}
-                  · {relativeTime(run.finishedAt ?? run.startedAt)}
+            <li key={run.id} className="py-0.5">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="text-ink-soft">
+                  {run.provider} · {run.mode}
                 </span>
-                {run.state === 'queued' || run.state === 'running' ? (
-                  <button
-                    onClick={() => cancelSync.mutate(run.id)}
-                    disabled={cancelSync.isPending}
-                    className="text-xs text-ink-faint underline-offset-2 transition hover:text-vermillion hover:underline disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                ) : null}
-              </span>
+                <span className="flex items-center gap-2">
+                  <span className="tabular text-xs text-ink-muted">
+                    {run.state === 'done'
+                      ? `+${run.stats.created} new, ${run.stats.updated} updated, ${run.stats.conflicts} conflicts`
+                      : run.state}{' '}
+                    · {relativeTime(run.finishedAt ?? run.startedAt)}
+                  </span>
+                  {run.state === 'queued' || run.state === 'running' ? (
+                    <button
+                      onClick={() => cancelSync.mutate(run.id)}
+                      disabled={cancelSync.isPending}
+                      className="text-xs text-ink-faint underline-offset-2 transition hover:text-vermillion hover:underline disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </span>
+              </div>
+              {run.state === 'failed' && run.error ? (
+                <p className="mt-0.5 text-xs text-vermillion-bright">{run.error}</p>
+              ) : null}
             </li>
           ))}
           {(runs.data?.runs.length ?? 0) === 0 ? (
