@@ -179,3 +179,54 @@ describe('sync cancel', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('sync history', () => {
+  it('clears only terminal-state runs, leaving an in-flight one untouched', async () => {
+    const client = request.agent(app);
+    await client
+      .post('/api/auth/register')
+      .send({ email: 'history@kanzen.test', password: 'constellation', displayName: 'History' });
+    const me = await client.get('/api/auth/me');
+    const conn = await Connection.create({
+      userId: me.body.user.id,
+      provider: 'anilist',
+      encryptedTokens: encryptJson({ accessToken: 'demo' }),
+    });
+    const running = await SyncRun.create({
+      userId: me.body.user.id,
+      connectionId: conn._id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'running',
+    });
+    const done = await SyncRun.create({
+      userId: me.body.user.id,
+      connectionId: conn._id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'done',
+    });
+    const failed = await SyncRun.create({
+      userId: me.body.user.id,
+      connectionId: conn._id,
+      provider: 'anilist',
+      mode: 'incremental',
+      state: 'failed',
+    });
+
+    const res = await client.delete('/api/sync/runs');
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(2);
+
+    expect(await SyncRun.findById(running._id)).not.toBeNull();
+    expect(await SyncRun.findById(done._id)).toBeNull();
+    expect(await SyncRun.findById(failed._id)).toBeNull();
+  });
+
+  it('blocks the demo account from clearing history', async () => {
+    const client = request.agent(app);
+    await client.post('/api/auth/demo');
+    const res = await client.delete('/api/sync/runs');
+    expect(res.status).toBe(403);
+  });
+});

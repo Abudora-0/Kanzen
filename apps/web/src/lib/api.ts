@@ -151,6 +151,7 @@ export const api = {
   cancelSync: (runId: string) =>
     request<{ run: SyncRunDto }>(`/sync/${runId}/cancel`, { method: 'POST' }),
   syncRuns: () => request<{ runs: SyncRunDto[] }>('/sync/runs'),
+  clearSyncRuns: () => request<{ deleted: number }>('/sync/runs', { method: 'DELETE' }),
   syncStatus: () =>
     request<{
       limiters: LimiterSnapshot[];

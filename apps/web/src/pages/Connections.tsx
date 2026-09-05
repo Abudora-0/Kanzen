@@ -65,6 +65,15 @@ export function Connections() {
     },
     onError: () => toast.show('Could not cancel that sync', 'error'),
   });
+  const clearRuns = useMutation({
+    mutationFn: api.clearSyncRuns,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sync-runs'] });
+      qc.invalidateQueries({ queryKey: ['sync-status'] });
+      toast.show('Cleared sync history');
+    },
+    onError: () => toast.show('Could not clear sync history', 'error'),
+  });
 
   const handledConnect = useRef<string | null>(null);
   useEffect(() => {
@@ -203,7 +212,22 @@ export function Connections() {
       </div>
 
       <Panel>
-        <SectionTitle eyebrow="queue history">Sync runs</SectionTitle>
+        <div className="mb-1 flex items-center justify-between">
+          <SectionTitle eyebrow="queue history" className="mb-0">
+            Sync runs
+          </SectionTitle>
+          {(runs.data?.runs ?? []).some((run) =>
+            ['done', 'failed', 'cancelled'].includes(run.state),
+          ) ? (
+            <Button
+              variant="quiet"
+              onClick={() => clearRuns.mutate()}
+              loading={clearRuns.isPending}
+            >
+              Clear
+            </Button>
+          ) : null}
+        </div>
         {(runs.data?.runs.length ?? 0) === 0 ? (
           <EmptyState
             className="border-0 bg-transparent py-8"

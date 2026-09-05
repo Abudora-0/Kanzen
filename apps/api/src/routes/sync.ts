@@ -76,6 +76,21 @@ syncRouter.get(
   }),
 );
 
+// Only terminal-state runs are removable, so an in-flight sync can never be
+// lost by clearing history out from under it.
+syncRouter.delete(
+  '/runs',
+  requireAuth,
+  blockDemoWrites,
+  asyncHandler(async (req, res) => {
+    const result = await SyncRun.deleteMany({
+      userId: toObjectId(req.auth!.userId),
+      state: { $in: ['done', 'failed', 'cancelled'] },
+    });
+    res.json({ deleted: result.deletedCount ?? 0 });
+  }),
+);
+
 syncRouter.get(
   '/status',
   requireAuth,
