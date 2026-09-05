@@ -154,7 +154,11 @@ async function applyEntry(
       type: work.type,
       status: merged.status,
       progress: merged.progress,
-      progressMax: work.episodes ?? work.chapters ?? (work.type === 'movie' ? 1 : null),
+      progressMax:
+        work.episodes ??
+        work.chapters ??
+        (work.type === 'book' ? work.runtime : null) ??
+        (work.type === 'movie' ? 1 : null),
       score: merged.score,
       repeats: raw.repeats ?? 0,
       startedAt: raw.startedAt ? new Date(raw.startedAt) : null,

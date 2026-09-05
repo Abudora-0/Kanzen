@@ -1,6 +1,6 @@
 import type { MediaType } from './media.js';
 
-export const PROVIDER_IDS = ['anilist', 'mal', 'kitsu', 'tmdb'] as const;
+export const PROVIDER_IDS = ['anilist', 'mal', 'kitsu', 'tmdb', 'hardcover'] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
 export type ProviderMeta = {
@@ -9,7 +9,7 @@ export type ProviderMeta = {
   /** Which media domains this provider can supply. */
   media: MediaType[];
   /** How a user links this provider. */
-  auth: 'oauth2-pkce' | 'oauth2' | 'api-key' | 'password' | 'none';
+  auth: 'oauth2-pkce' | 'oauth2' | 'api-key' | 'password' | 'token' | 'none';
   /** Published rate limit, used to seed the client side limiter. */
   rateLimit: { requestsPerMinute: number; burst: number };
   color: string;
@@ -58,6 +58,16 @@ export const PROVIDERS: Record<ProviderId, ProviderMeta> = {
     color: '#01b4e4',
     status: 'live',
     docs: 'https://developer.themoviedb.org/reference/intro/getting-started',
+  },
+  hardcover: {
+    id: 'hardcover',
+    name: 'Hardcover',
+    media: ['book'],
+    auth: 'token',
+    rateLimit: { requestsPerMinute: 60, burst: 10 },
+    color: '#f2a922',
+    status: 'live',
+    docs: 'https://docs.hardcover.app/api/getting-started',
   },
 };
 

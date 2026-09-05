@@ -20,7 +20,9 @@ export function catalogToRawWork(item: CatalogItem, provider: ProviderId): RawWo
       ? String(item.externalIds?.tmdb ?? item.key)
       : provider === 'mal'
         ? String(item.externalIds?.mal ?? item.key)
-        : String(item.externalIds?.anilist ?? item.key);
+        : provider === 'hardcover'
+          ? String(item.externalIds?.hardcover ?? item.key)
+          : String(item.externalIds?.anilist ?? item.key);
 
   return {
     externalId: providerExternalId,
@@ -48,7 +50,9 @@ export function catalogToRawWork(item: CatalogItem, provider: ProviderId): RawWo
             ? String(target.externalIds?.tmdb ?? target.key)
             : provider === 'mal'
               ? String(target.externalIds?.mal ?? target.key)
-              : String(target.externalIds?.anilist ?? target.key);
+              : provider === 'hardcover'
+                ? String(target.externalIds?.hardcover ?? target.key)
+                : String(target.externalIds?.anilist ?? target.key);
         return { relationType: rel.relationType, externalId: targetId };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null),

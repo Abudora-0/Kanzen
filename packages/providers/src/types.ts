@@ -92,12 +92,14 @@ export interface MediaProvider {
     redirectUri: string;
   }): Promise<{ tokens: TokenSet; handle: string | null }>;
   /**
-   * For providers with no redirect OAuth (Kitsu). Trades a username and password
-   * for a token once; the password is never stored.
+   * For providers with no redirect OAuth. Kitsu trades a username and password
+   * for a token once (the password is never stored); Hardcover instead takes a
+   * user-generated personal access token directly.
    */
   exchangeCredentials?(input: {
-    username: string;
-    password: string;
+    username?: string;
+    password?: string;
+    token?: string;
   }): Promise<{ tokens: TokenSet; handle: string | null }>;
   refresh(tokens: TokenSet): Promise<TokenSet>;
   fetchLibrary(ctx: SyncContext, cursor?: string | null): Promise<Page<RawEntry>>;

@@ -27,6 +27,7 @@ function externalIdFilter(raw: RawWork): FilterQuery<WorkDoc> | null {
   if (ids.mal) or.push({ 'externalIds.mal': ids.mal });
   if (ids.kitsu) or.push({ 'externalIds.kitsu': ids.kitsu });
   if (ids.tmdb) or.push({ 'externalIds.tmdb': ids.tmdb });
+  if (ids.hardcover) or.push({ 'externalIds.hardcover': ids.hardcover });
   if (ids.imdb) or.push({ 'externalIds.imdb': ids.imdb });
   if (ids.isbn) or.push({ 'externalIds.isbn': ids.isbn });
   return or.length ? { $or: or } : null;

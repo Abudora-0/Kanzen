@@ -135,7 +135,10 @@ export const api = {
       `/connections/${provider}/connect`,
       { method: 'POST' },
     ),
-  connectCredentials: (provider: string, body: { username: string; password: string }) =>
+  connectCredentials: (
+    provider: string,
+    body: { username: string; password: string } | { token: string },
+  ) =>
     request<{ connection: ConnectionDto; synced: boolean }>(
       `/connections/${provider}/credentials`,
       { method: 'POST', body: JSON.stringify(body) },

@@ -63,6 +63,16 @@ const PROVIDER_STATUS_IN: Record<ProviderId, StatusMap> = {
     watched: 'completed',
     favorite: 'current',
   },
+  // Hardcover statuses are numeric ids (see hardcoverapp/hardcover-docs):
+  // 1 Want to Read, 2 Currently Reading, 3 Read, 4 Paused, 5 Did Not Finish,
+  // 6 Ignored (excluded at the query level, never reaches this map).
+  hardcover: {
+    '1': 'planning',
+    '2': 'current',
+    '3': 'completed',
+    '4': 'paused',
+    '5': 'dropped',
+  },
 };
 
 /** Canonical status -> provider status string. */
@@ -94,6 +104,14 @@ const PROVIDER_STATUS_OUT: Record<ProviderId, Partial<Record<EntryStatus, string
   tmdb: {
     planning: 'watchlist',
     completed: 'watched',
+  },
+  hardcover: {
+    planning: '1',
+    current: '2',
+    completed: '3',
+    paused: '4',
+    dropped: '5',
+    repeating: '2',
   },
 };
 

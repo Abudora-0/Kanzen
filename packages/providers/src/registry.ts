@@ -3,6 +3,7 @@ import { AniListProvider } from './adapters/anilist.js';
 import { MalProvider } from './adapters/mal.js';
 import { KitsuProvider } from './adapters/kitsu.js';
 import { TmdbProvider } from './adapters/tmdb.js';
+import { HardcoverProvider } from './adapters/hardcover.js';
 import type { MediaProvider } from './types.js';
 
 export type ProviderConfig = {
@@ -22,6 +23,7 @@ export function createProviderRegistry(config: ProviderConfig = {}): ProviderReg
     mal: new MalProvider(config.mal ?? {}),
     kitsu: new KitsuProvider(),
     tmdb: new TmdbProvider(config.tmdb ?? {}),
+    hardcover: new HardcoverProvider(),
   };
 
   return {

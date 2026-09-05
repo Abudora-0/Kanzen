@@ -69,7 +69,11 @@ export function WorkDetail() {
 
   const { entry, work, relatedProgress } = data;
   const max =
-    entry.progressMax ?? work.episodes ?? work.chapters ?? (work.type === 'movie' ? 1 : 100);
+    entry.progressMax ??
+    work.episodes ??
+    work.chapters ??
+    (work.type === 'book' ? work.runtime : null) ??
+    (work.type === 'movie' ? 1 : 100);
 
   return (
     <div className="space-y-6">

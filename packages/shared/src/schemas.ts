@@ -45,10 +45,15 @@ export const resolveConflictSchema = z.object({
   strategy: z.enum(['prefer-local', 'prefer-remote', 'prefer-furthest']),
 });
 
-export const credentialsSchema = z.object({
-  username: z.string().min(1).max(200),
-  password: z.string().min(1).max(400),
-});
+export const credentialsSchema = z
+  .object({
+    username: z.string().min(1).max(200).optional(),
+    password: z.string().min(1).max(400).optional(),
+    token: z.string().min(1).max(2000).optional(),
+  })
+  .refine((v) => (v.username && v.password) || v.token, {
+    message: 'Provide a username and password, or a token',
+  });
 
 export const workCoverSchema = z.object({
   coverImage: z

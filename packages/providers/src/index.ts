@@ -7,5 +7,6 @@ export { AniListProvider } from './adapters/anilist.js';
 export { MalProvider } from './adapters/mal.js';
 export { KitsuProvider } from './adapters/kitsu.js';
 export { TmdbProvider } from './adapters/tmdb.js';
+export { HardcoverProvider } from './adapters/hardcover.js';
 export { demoLibrary, catalogToRawWork, CATALOG, CATALOG_BY_KEY } from './fixtures/index.js';
 export type { CatalogItem } from './fixtures/index.js';

@@ -7,6 +7,7 @@ export const PROVIDER_COLOR: Record<string, string> = {
   mal: '#8aa4e6',
   kitsu: '#f2542d',
   tmdb: '#01b4e4',
+  hardcover: '#f2a922',
   kanzen: '#be5a31',
 };
 

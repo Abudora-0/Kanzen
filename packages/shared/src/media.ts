@@ -49,6 +49,7 @@ export type ExternalIds = {
   mal?: number;
   kitsu?: number;
   tmdb?: number;
+  hardcover?: number;
   imdb?: string;
   isbn?: string;
 };

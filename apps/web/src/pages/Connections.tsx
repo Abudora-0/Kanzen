@@ -5,8 +5,20 @@ import { api, ApiError } from '../lib/api';
 import { Panel, SectionTitle, Button, Badge } from '../components/ui/primitives';
 import { EmptyState } from '../components/EmptyState';
 import { ProviderIcon } from '../components/ProviderIcon';
+import { Icon } from '../components/Icon';
 import { useToast } from '../lib/toast';
 import { PROVIDER_COLOR, relativeTime } from '../lib/utils';
+
+// Hardcover has no official brand mark on hand, so it falls back to the
+// generic book glyph rather than an invented logo.
+function TrackerIcon({ provider, size }: { provider: string; size: number }) {
+  if (provider === 'hardcover') return <Icon name="book" size={size} />;
+  return <ProviderIcon provider={provider} size={size} />;
+}
+
+// Providers with no redirect OAuth link via an inline form instead of a
+// "Connect" button: Kitsu takes a username and password, Hardcover a token.
+const CREDENTIALS_AUTH = new Set(['password', 'token']);
 
 export function Connections() {
   const qc = useQueryClient();
@@ -104,7 +116,7 @@ export function Connections() {
                       background: PROVIDER_COLOR[item.provider] ?? 'var(--color-vermillion)',
                     }}
                   >
-                    <ProviderIcon provider={item.provider} size={17} />
+                    <TrackerIcon provider={item.provider} size={17} />
                   </span>
                   <div>
                     <p className="font-display text-ink">{item.meta.name}</p>
@@ -134,7 +146,7 @@ export function Connections() {
                       last sync {relativeTime(conn.lastSyncedAt)}
                     </span>
                   </span>
-                ) : item.meta.auth === 'password' && !data.demoMode ? null : (
+                ) : CREDENTIALS_AUTH.has(item.meta.auth) && !data.demoMode ? null : (
                   <span className="text-sm text-ink-muted">not connected</span>
                 )}
                 <div className="flex gap-2">
@@ -149,7 +161,7 @@ export function Connections() {
                         Remove
                       </Button>
                     </>
-                  ) : item.meta.auth === 'password' && !data.demoMode ? null : (
+                  ) : CREDENTIALS_AUTH.has(item.meta.auth) && !data.demoMode ? null : (
                     <Button
                       variant="primary"
                       onClick={() => connect.mutate(item.provider)}
@@ -162,10 +174,11 @@ export function Connections() {
                 </div>
               </div>
 
-              {!conn && item.meta.auth === 'password' && !data.demoMode ? (
-                <PasswordConnect
+              {!conn && CREDENTIALS_AUTH.has(item.meta.auth) && !data.demoMode ? (
+                <CredentialsConnect
                   provider={item.provider}
                   name={item.meta.name}
+                  auth={item.meta.auth as 'password' | 'token'}
                   onDone={() => {
                     qc.invalidateQueries({ queryKey: ['connections'] });
                     qc.invalidateQueries({ queryKey: ['sync-runs'] });
@@ -212,24 +225,29 @@ export function Connections() {
   );
 }
 
-function PasswordConnect({
+function CredentialsConnect({
   provider,
   name,
+  auth,
   onDone,
 }: {
   provider: string;
   name: string;
+  auth: 'password' | 'token';
   onDone: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const link = useMutation({
-    mutationFn: () => api.connectCredentials(provider, { username, password }),
+    mutationFn: () =>
+      api.connectCredentials(provider, auth === 'token' ? { token } : { username, password }),
     onSuccess: () => {
       setPassword('');
+      setToken('');
       setOpen(false);
       onDone();
     },
@@ -240,8 +258,8 @@ function PasswordConnect({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!username.trim() || !password) {
-      setError('Enter your email and password.');
+    if (auth === 'token' ? !token.trim() : !username.trim() || !password) {
+      setError(auth === 'token' ? 'Paste your API token.' : 'Enter your email and password.');
       return;
     }
     link.mutate();
@@ -253,7 +271,7 @@ function PasswordConnect({
         onClick={() => setOpen(true)}
         className="mt-3 text-sm text-vermillion transition hover:text-vermillion-bright"
       >
-        Sign in to {name}
+        {auth === 'token' ? `Link ${name}` : `Sign in to ${name}`}
       </button>
     );
   }
@@ -261,25 +279,48 @@ function PasswordConnect({
   return (
     <form onSubmit={submit} className="mt-3 space-y-2 border-t border-hairline pt-3">
       <p className="text-xs text-ink-faint">
-        {name} has no third-party OAuth, so it takes your login directly. Your password is exchanged
-        for a token once and never stored.
+        {auth === 'token' ? (
+          <>
+            {name} has no OAuth app, so it takes a personal access token instead. Generate one from
+            your {name} account settings and paste it below; it is stored encrypted and never shown
+            again.
+          </>
+        ) : (
+          <>
+            {name} has no third-party OAuth, so it takes your login directly. Your password is
+            exchanged for a token once and never stored.
+          </>
+        )}
       </p>
-      <input
-        type="email"
-        autoComplete="username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder={`${name} email`}
-        className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
-      />
-      <input
-        type="password"
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
-      />
+      {auth === 'token' ? (
+        <input
+          type="password"
+          autoComplete="off"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder={`${name} API token`}
+          className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
+        />
+      ) : (
+        <>
+          <input
+            type="email"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder={`${name} email`}
+            className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
+          />
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full rounded-[10px] border border-hairline bg-surface/70 px-3 py-2 text-sm text-ink outline-none transition focus:border-vermillion"
+          />
+        </>
+      )}
       {error ? <p className="text-xs text-vermillion-bright">{error}</p> : null}
       <div className="flex gap-2">
         <Button type="submit" variant="primary" loading={link.isPending}>

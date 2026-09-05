@@ -36,6 +36,7 @@ const workSchema = new Schema(
       mal: { type: Number, default: null },
       kitsu: { type: Number, default: null },
       tmdb: { type: Number, default: null },
+      hardcover: { type: Number, default: null },
       imdb: { type: String, default: null },
       isbn: { type: String, default: null },
     },
@@ -49,6 +50,7 @@ workSchema.index({ 'externalIds.anilist': 1 }, { sparse: true });
 workSchema.index({ 'externalIds.mal': 1 }, { sparse: true });
 workSchema.index({ 'externalIds.tmdb': 1 }, { sparse: true });
 workSchema.index({ 'externalIds.isbn': 1 }, { sparse: true });
+workSchema.index({ 'externalIds.hardcover': 1 }, { sparse: true });
 workSchema.index({ displayTitle: 'text', synonyms: 'text' });
 
 export type WorkDoc = HydratedDocument<InferSchemaType<typeof workSchema>>;

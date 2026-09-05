@@ -98,8 +98,10 @@ connectionsRouter.post(
   }),
 );
 
-// Password-grant providers (Kitsu) link without a redirect. The credentials are
-// forwarded to the provider once and never stored or logged.
+// Providers with no redirect OAuth link here instead: Kitsu with a username
+// and password (password-grant), Hardcover with a pasted personal access
+// token. Credentials are forwarded to the provider once and never logged;
+// only the resulting token is stored, encrypted.
 connectionsRouter.post(
   '/:provider/credentials',
   requireAuth,
@@ -131,11 +133,11 @@ connectionsRouter.post(
     if (!adapter.exchangeCredentials) {
       throw badRequest(`${PROVIDERS[provider].name} does not support a password login.`);
     }
-    const { username, password } = credentialsSchema.parse(req.body);
+    const parsed = credentialsSchema.parse(req.body);
 
     let linked;
     try {
-      linked = await adapter.exchangeCredentials({ username, password });
+      linked = await adapter.exchangeCredentials(parsed);
     } catch {
       throw badRequest(`${PROVIDERS[provider].name} did not accept those details.`);
     }

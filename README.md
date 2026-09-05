@@ -72,6 +72,7 @@ flowchart LR
     P1[AniList]
     P2[TMDB]
     P3[MAL / Kitsu]
+    P4[Hardcover]
   end
 
   W -- fetch + SSE --> A
@@ -80,6 +81,7 @@ flowchart LR
   A -- enqueue --> R
   R -- jobs --> K
   K -- OAuth2, rate limited --> P1 & P2 & P3
+  K -- token, rate limited --> P4
   K -- upsert works, entries, activity --> M
   CR -- enqueue or run inline --> K
 ```
@@ -119,7 +121,7 @@ apps/
   worker/    thin entrypoint that runs the BullMQ consumers
 packages/
   shared/    domain types, zod schemas, status mapping tables
-  providers/ MediaProvider adapter interface + AniList, TMDB, MAL, Kitsu + fixtures
+  providers/ MediaProvider adapter interface + AniList, TMDB, MAL, Kitsu, Hardcover + fixtures
 api/index.ts       Vercel serverless entry that wraps the Express app
 ```
 
@@ -269,12 +271,15 @@ Each provider then shows a real "Connect" button on the Trackers page and, once
 linked, appears as a source on every entry it tracks. Local edits (progress,
 status, score) are pushed back to every linked provider.
 
-All four providers are live. AniList, MyAnimeList, and TMDB use the OAuth2
-redirect flow above. **Kitsu** needs none of that: its OAuth only offers a
-password grant, so it skips the client id/secret entirely and shows an inline
-"sign in to Kitsu" form instead of a redirect. The password is exchanged for a
-token once and never stored. Providers without credentials show a disabled
-"Needs keys" button.
+All five providers are live. AniList, MyAnimeList, and TMDB use the OAuth2
+redirect flow above. **Kitsu** and **Hardcover** need none of that: Kitsu's
+OAuth only offers a password grant, so it shows an inline "sign in to Kitsu"
+form instead of a redirect, and the password is exchanged for a token once and
+never stored. Hardcover's beta API only supports personal access tokens (no
+OAuth app to register at all), so it shows an inline field for a token
+generated on the user's own [hardcover.app](https://hardcover.app) account
+settings page, also never stored in plain text. Providers without credentials
+show a disabled "Needs keys" button.
 
 The API runs each sync and write-back inline in the request, so no separate
 worker is required (see the next section to move that onto a queue). The seeded
@@ -303,8 +308,6 @@ docker run --env-file .env kanzen-worker
 
 ## Roadmap
 
-- A book tracker provider (Goodreads has no public API; Hardcover's beta API is the
-  live candidate)
 - Recommendation surface from the taste fingerprint and franchise graph
 - Shareable read only library snapshots
 - Native Bottleneck Redis datastore for multi instance rate limiting
