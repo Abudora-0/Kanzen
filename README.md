@@ -71,7 +71,7 @@ flowchart LR
   subgraph Providers
     P1[AniList]
     P2[TMDB]
-    P3[MAL / Kitsu<br/>stub adapters]
+    P3[MAL / Kitsu]
   end
 
   W -- fetch + SSE --> A
@@ -269,9 +269,12 @@ Each provider then shows a real "Connect" button on the Trackers page and, once
 linked, appears as a source on every entry it tracks. Local edits (progress,
 status, score) are pushed back to every linked provider.
 
-AniList, MyAnimeList, and TMDB are live. **Kitsu** stays fixture-only: its OAuth
-only offers a password grant, and Kanzen does not collect provider passwords.
-Providers without credentials show a disabled "Needs keys" button.
+All four providers are live. AniList, MyAnimeList, and TMDB use the OAuth2
+redirect flow above. **Kitsu** needs none of that: its OAuth only offers a
+password grant, so it skips the client id/secret entirely and shows an inline
+"sign in to Kitsu" form instead of a redirect. The password is exchanged for a
+token once and never stored. Providers without credentials show a disabled
+"Needs keys" button.
 
 The API runs each sync and write-back inline in the request, so no separate
 worker is required (see the next section to move that onto a queue). The seeded
@@ -300,7 +303,8 @@ docker run --env-file .env kanzen-worker
 
 ## Roadmap
 
-- Real MyAnimeList and Kitsu adapters behind the existing interface
+- A book tracker provider (Goodreads has no public API; Hardcover's beta API is the
+  live candidate)
 - Recommendation surface from the taste fingerprint and franchise graph
 - Shareable read only library snapshots
 - Native Bottleneck Redis datastore for multi instance rate limiting
