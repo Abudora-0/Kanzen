@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import type { MediaType } from '@kanzen/shared';
 import { KanzenMark } from '../components/KanzenMark';
 import { Footer } from '../components/Footer';
 import { CoverImage } from '../components/CoverImage';
+import { Icon } from '../components/Icon';
 import { useInViewReveal } from '../lib/motion';
 import { useAuth } from '../lib/store';
+
+const MotionLink = motion(Link);
 
 const FEATURES = [
   {
@@ -80,18 +84,25 @@ export function Landing() {
       <div className="paper-grain pointer-events-none absolute inset-0 opacity-60" />
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-6">
-        <KanzenMark variant="full" size={36} replayOnHover />
-        <Link
+        <KanzenMark variant="full" size={40} replayOnHover />
+        <MotionLink
           to={user ? '/dashboard' : '/enter'}
-          className="rounded-[12px] border border-hairline-bright px-4 py-1.5 text-sm text-ink transition hover:border-vermillion"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="group flex items-center gap-1 rounded-[12px] border border-hairline-bright bg-surface/60 px-4 py-1.5 text-sm text-ink shadow-card transition-colors hover:border-vermillion hover:bg-vermillion hover:text-white"
         >
           {user ? 'Open deck' : 'Sign in'}
-        </Link>
+          <Icon
+            name="chevron-right"
+            size={14}
+            className="transition-transform group-hover:translate-x-0.5"
+          />
+        </MotionLink>
       </header>
 
       <section className="relative z-10 mx-auto max-w-5xl px-5 pb-16 pt-14 text-center">
         <div className="mx-auto mb-9 w-fit">
-          <KanzenMark size={140} replayOnHover />
+          <KanzenMark size={176} replayOnHover />
         </div>
         <p className="mb-4 text-[0.72rem] uppercase tracking-[0.34em] text-vermillion">
           track all your trackers in one place
@@ -107,32 +118,38 @@ export function Landing() {
           your taste.
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link
+          <MotionLink
             to="/enter"
-            className="rounded-[12px] bg-vermillion px-6 py-3 text-sm font-medium text-white shadow-card transition hover:bg-vermillion-bright"
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96, y: 0 }}
+            className="rounded-[12px] bg-vermillion px-6 py-3 text-sm font-medium text-white shadow-card transition-colors hover:bg-vermillion-bright"
           >
             Start tracking
-          </Link>
-          <Link
+          </MotionLink>
+          <MotionLink
             to="/enter?demo=1"
-            className="rounded-[12px] border border-hairline-bright px-6 py-3 text-sm text-ink transition hover:border-sage"
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96, y: 0 }}
+            className="rounded-[12px] border border-hairline-bright px-6 py-3 text-sm text-ink transition-colors hover:border-sage hover:text-sage"
           >
             Explore the demo
-          </Link>
+          </MotionLink>
         </div>
       </section>
 
       <section className="relative z-10 mx-auto max-w-5xl overflow-hidden px-5 pb-20">
-        <div className="flex gap-3 [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
-          {STRIP.map((s) => (
-            <CoverImage
-              key={s.title}
-              src={s.src}
-              alt={s.title}
-              type={s.type}
-              className="aspect-[2/3] w-24 shrink-0 sm:w-28"
-            />
-          ))}
+        <div className="[mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+          <div className="marquee-track flex w-fit gap-3">
+            {[...STRIP, ...STRIP].map((s, i) => (
+              <CoverImage
+                key={`${s.title}-${i}`}
+                src={s.src}
+                alt={s.title}
+                type={s.type}
+                className="aspect-[2/3] w-24 shrink-0 sm:w-28"
+              />
+            ))}
+          </div>
         </div>
       </section>
 

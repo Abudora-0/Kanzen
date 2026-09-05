@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/*.config.{js,ts,cjs,mjs}',
       '**/playwright-report/**',
       'scripts/**',
+      'apps/web/public/**',
     ],
   },
   js.configs.recommended,

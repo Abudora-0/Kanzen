@@ -305,6 +305,24 @@ h3,
   animation: kanzen-fade-up 0.55s var(--ease-out-quint) both;
 }
 
+/* Poster strip: two back-to-back copies of the same row scroll left forever.
+   The loop point is invisible since both copies are identical. Reduced
+   motion collapses this to a single, still frame via the rule above. */
+@keyframes kanzen-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: kanzen-marquee 38s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
 .lift {
   transition:
     transform 0.25s var(--ease-out-quint),

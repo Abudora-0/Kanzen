@@ -29,7 +29,7 @@
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-nlR/IBKpi/hhJoWN5x9Tip90AQim2pA3/5YYNsE0s6E='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://s4.anilist.co https://image.tmdb.org https://covers.openlibrary.org https://books.google.com https://books.googleusercontent.com; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://s4.anilist.co https://image.tmdb.org https://covers.openlibrary.org https://archive.org https://*.us.archive.org https://books.google.com https://books.googleusercontent.com; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
         }
       ]
     }

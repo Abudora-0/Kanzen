@@ -10,23 +10,7 @@
       content="Kanzen brings every media tracker you use into one place: connect AniList, MyAnimeList, Kitsu, and TMDB, and keep your anime, manga, books, and movies in sync."
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <!-- CSP allows this exact script via a sha256 hash in vercel.json. If you
-         edit it, recompute the hash and update the script-src there too. -->
-    <script>
-      (function () {
-        try {
-          var t = localStorage.getItem('kanzen:theme');
-          var dark =
-            t === 'dark' ||
-            ((!t || t === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          var root = document.documentElement;
-          if (t === 'light' || t === 'dark') root.dataset.theme = t;
-          root.style.colorScheme = dark ? 'dark' : 'light';
-          var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute('content', dark ? '#15120d' : '#f5eee0');
-        } catch (e) {}
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
