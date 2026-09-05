@@ -7,7 +7,7 @@ import { asyncHandler, badRequest } from '../http/errors.js';
 import { serializeSyncRun } from '../dto/serialize.js';
 import { getQueues } from '../queue/queues.js';
 import { allLimiterSnapshots } from '../ratelimit/limiter.js';
-import { dispatchSync } from '../sync/dispatch.js';
+import { dispatchSync, reapStaleSyncRuns } from '../sync/dispatch.js';
 
 export const syncRouter: Router = Router();
 
@@ -36,6 +36,7 @@ syncRouter.get(
   '/runs',
   requireAuth,
   asyncHandler(async (req, res) => {
+    await reapStaleSyncRuns({ userId: toObjectId(req.auth!.userId) });
     const runs = await SyncRun.find({ userId: toObjectId(req.auth!.userId) })
       .sort({ createdAt: -1 })
       .limit(20);
@@ -47,6 +48,7 @@ syncRouter.get(
   '/status',
   requireAuth,
   asyncHandler(async (req, res) => {
+    await reapStaleSyncRuns({ userId: toObjectId(req.auth!.userId) });
     const [limiters, queueCounts, activeRuns] = await Promise.all([
       allLimiterSnapshots(),
       getQueues()

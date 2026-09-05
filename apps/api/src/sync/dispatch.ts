@@ -13,11 +13,46 @@ type DispatchInput = {
 };
 
 /**
+ * Inline syncs run inside a single Vercel function invocation, which is hard
+ * killed at its execution time limit with no chance to update the SyncRun. A
+ * run still "running" past this window cannot be real; it was killed.
+ */
+const STALE_RUN_MS = 90_000;
+
+/** Mark runs the platform killed mid-flight as failed instead of leaving them
+ * stuck "running" forever. Scoped by an arbitrary Mongo filter so callers can
+ * reap for one connection (before dispatching) or a whole user (on page load). */
+export async function reapStaleSyncRuns(filter: Record<string, unknown>): Promise<void> {
+  await SyncRun.updateMany(
+    {
+      ...filter,
+      state: { $in: ['queued', 'running'] },
+      updatedAt: { $lt: new Date(Date.now() - STALE_RUN_MS) },
+    },
+    {
+      $set: {
+        state: 'failed',
+        finishedAt: new Date(),
+        error: 'Timed out (exceeded the serverless function limit)',
+      },
+    },
+  );
+}
+
+/**
  * Create a SyncRun and either hand it to the BullMQ worker or, when no worker
  * is running, execute it inline. The inline path keeps the deployment free of a
  * separate long lived process at the cost of a longer request for big libraries.
  */
 export async function dispatchSync({ connection, mode }: DispatchInput) {
+  await reapStaleSyncRuns({ connectionId: connection._id });
+
+  const active = await SyncRun.findOne({
+    connectionId: connection._id,
+    state: { $in: ['queued', 'running'] },
+  }).sort({ createdAt: -1 });
+  if (active) return active;
+
   const run = await SyncRun.create({
     userId: connection.userId,
     connectionId: connection._id,

@@ -1,3 +1,4 @@
+import Bottleneck from 'bottleneck';
 import type { ProviderId } from '@kanzen/shared';
 import type { RawEntry } from '@kanzen/providers';
 import { estimateMinutes } from '@kanzen/shared';
@@ -72,31 +73,39 @@ export async function runSync(opts: RunOptions): Promise<SyncStats> {
   const total = raws.length || 1;
   let done = 0;
 
-  for (const raw of raws) {
-    const work = await resolveWork(raw.work);
-    const outcome = await applyEntry(
-      String(connection.userId),
-      connection.provider as ProviderId,
-      work.id,
-      raw,
-      work,
-    );
-    if (outcome === 'created') stats.created += 1;
-    else stats.updated += 1;
-    if (outcome === 'conflict') stats.conflicts += 1;
+  // Each entry is a handful of sequential Mongo round trips; run them with
+  // bounded concurrency so a real library does not blow past the serverless
+  // function's execution time limit while running fully one at a time.
+  const entryLimiter = new Bottleneck({ maxConcurrent: 8 });
+  await Promise.all(
+    raws.map((raw) =>
+      entryLimiter.schedule(async () => {
+        const work = await resolveWork(raw.work);
+        const outcome = await applyEntry(
+          String(connection.userId),
+          connection.provider as ProviderId,
+          work.id,
+          raw,
+          work,
+        );
+        if (outcome === 'created') stats.created += 1;
+        else stats.updated += 1;
+        if (outcome === 'conflict') stats.conflicts += 1;
 
-    done += 1;
-    if (done % 10 === 0 || done === raws.length) {
-      opts.onProgress?.(done, total);
-      await publishEvent(String(connection.userId), {
-        type: 'sync:progress',
-        provider: connection.provider as ProviderId,
-        runId: syncRunId,
-        done,
-        total,
-      });
-    }
-  }
+        done += 1;
+        if (done % 10 === 0 || done === raws.length) {
+          opts.onProgress?.(done, total);
+          await publishEvent(String(connection.userId), {
+            type: 'sync:progress',
+            provider: connection.provider as ProviderId,
+            runId: syncRunId,
+            done,
+            total,
+          });
+        }
+      }),
+    ),
+  );
 
   await linkRelations(raws.map((r) => r.work));
 
