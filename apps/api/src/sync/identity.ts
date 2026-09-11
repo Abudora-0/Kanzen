@@ -1,3 +1,4 @@
+import Bottleneck from 'bottleneck';
 import type { RawWork } from '@kanzen/providers';
 import type { FilterQuery } from 'mongoose';
 import { Work, type WorkDoc } from '../models/index.js';
@@ -103,34 +104,68 @@ export async function resolveWork(raw: RawWork): Promise<WorkDoc> {
 
 /**
  * Second pass: turn provider relation edges (by external id) into Work
- * references now that every work in the batch exists.
+ * references now that every work in the batch exists. One query per relation
+ * edge, fully sequential across the whole library, made a large AniList
+ * library (rich in prequel/sequel/side-story edges) take minutes after the
+ * entry loop had already finished; batched per raw plus bounded concurrency
+ * across raws cuts that to a couple of queries per work.
  */
 export async function linkRelations(raws: RawWork[]): Promise<void> {
-  for (const raw of raws) {
-    if (!raw.relations?.length) continue;
-    const self = await Work.findOne(externalIdFilter(raw) ?? { _id: null });
-    if (!self) continue;
+  const withRelations = raws.filter((raw) => raw.relations?.length);
+  const limiter = new Bottleneck({ maxConcurrent: 8 });
 
-    const linked: { relationType: string; work: unknown }[] = [];
-    for (const rel of raw.relations) {
-      const numeric = Number(rel.externalId);
-      const or: FilterQuery<WorkDoc>[] = [];
-      if (Number.isFinite(numeric)) {
-        or.push(
-          { 'externalIds.anilist': numeric },
-          { 'externalIds.mal': numeric },
-          { 'externalIds.tmdb': numeric },
-        );
-      } else {
-        or.push({ 'externalIds.imdb': rel.externalId }, { displayTitle: rel.externalId });
-      }
-      const target = await Work.findOne({ $or: or });
-      if (target && String(target._id) !== String(self._id)) {
-        linked.push({ relationType: rel.relationType, work: target._id });
-      }
-    }
-    if (linked.length) {
-      await Work.updateOne({ _id: self._id }, { $set: { relations: linked } });
-    }
-  }
+  await Promise.all(
+    withRelations.map((raw) =>
+      limiter.schedule(async () => {
+        const self = await Work.findOne(externalIdFilter(raw) ?? { _id: null });
+        if (!self) return;
+
+        const numericIds = new Set<number>();
+        const stringIds = new Set<string>();
+        for (const rel of raw.relations!) {
+          const numeric = Number(rel.externalId);
+          if (Number.isFinite(numeric)) numericIds.add(numeric);
+          else stringIds.add(rel.externalId);
+        }
+
+        const or: FilterQuery<WorkDoc>[] = [];
+        if (numericIds.size) {
+          const ids = [...numericIds];
+          or.push(
+            { 'externalIds.anilist': { $in: ids } },
+            { 'externalIds.mal': { $in: ids } },
+            { 'externalIds.tmdb': { $in: ids } },
+          );
+        }
+        for (const id of stringIds) {
+          or.push({ 'externalIds.imdb': id }, { displayTitle: id });
+        }
+        const candidates = or.length ? await Work.find({ $or: or }) : [];
+
+        const byNumeric = new Map<number, WorkDoc>();
+        const byString = new Map<string, WorkDoc>();
+        for (const w of candidates) {
+          if (w.externalIds?.anilist != null) byNumeric.set(w.externalIds.anilist, w);
+          if (w.externalIds?.mal != null) byNumeric.set(w.externalIds.mal, w);
+          if (w.externalIds?.tmdb != null) byNumeric.set(w.externalIds.tmdb, w);
+          if (w.externalIds?.imdb) byString.set(w.externalIds.imdb, w);
+          byString.set(w.displayTitle, w);
+        }
+
+        const linked: { relationType: string; work: unknown }[] = [];
+        for (const rel of raw.relations!) {
+          const numeric = Number(rel.externalId);
+          const target = Number.isFinite(numeric)
+            ? byNumeric.get(numeric)
+            : byString.get(rel.externalId);
+          if (target && String(target._id) !== String(self._id)) {
+            linked.push({ relationType: rel.relationType, work: target._id });
+          }
+        }
+        if (linked.length) {
+          await Work.updateOne({ _id: self._id }, { $set: { relations: linked } });
+        }
+      }),
+    ),
+  );
 }
