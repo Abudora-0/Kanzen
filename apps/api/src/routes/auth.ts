@@ -112,7 +112,10 @@ authRouter.post(
         expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
       });
       const resetUrl = `${env.WEB_ORIGIN}/reset-password?token=${rawToken}`;
-      sendPasswordResetEmail(user.email, resetUrl).catch((err) =>
+      // Awaited deliberately: fire-and-forget here risks the serverless
+      // function being frozen or torn down right after the response is
+      // sent, before this ever actually runs.
+      await sendPasswordResetEmail(user.email, resetUrl).catch((err) =>
         logger.warn({ err: (err as Error).message }, 'password reset email not sent'),
       );
     }
