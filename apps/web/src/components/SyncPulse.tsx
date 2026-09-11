@@ -28,7 +28,7 @@ export function SyncPulse({ pulse }: Props) {
   const cx = size / 2;
 
   return (
-    <div className="glass p-5">
+    <div className="glass w-full p-5">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display text-base text-ink">Sync pulse</h3>
         <span className={`text-[0.7rem] ${pulse.active ? 'text-aurora-teal' : 'text-ink-faint'}`}>

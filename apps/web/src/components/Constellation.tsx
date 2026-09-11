@@ -209,7 +209,7 @@ export function Constellation({ nodes, links, onSelect, height = 460 }: Props) {
   }, [data, height, reduceMotion, onSelect]);
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className="relative w-full">
       <canvas ref={canvasRef} className="rounded-[14px]" />
       <div className="pointer-events-none absolute left-3 top-3 flex gap-3 text-[0.7rem] text-ink-muted">
         {(Object.keys(TYPE_COLOR) as MediaType[]).map((t) => (

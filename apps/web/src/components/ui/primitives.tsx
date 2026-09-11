@@ -9,7 +9,7 @@ export function Panel({
   ...rest
 }: HTMLAttributes<HTMLDivElement> & { children: ReactNode; hoverable?: boolean }) {
   return (
-    <div className={cn('glass p-5', hoverable && 'glass-hover', className)} {...rest}>
+    <div className={cn('glass w-full p-5', hoverable && 'glass-hover', className)} {...rest}>
       {children}
     </div>
   );
