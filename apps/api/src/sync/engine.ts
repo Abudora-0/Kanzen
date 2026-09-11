@@ -85,17 +85,29 @@ export async function runSync(opts: RunOptions): Promise<SyncStats> {
         // task not yet started skips its work, one already running finishes.
         if (cancelled) return;
 
-        const work = await resolveWork(raw.work);
-        const outcome = await applyEntry(
-          String(connection.userId),
-          connection.provider as ProviderId,
-          work.id,
-          raw,
-          work,
-        );
-        if (outcome === 'created') stats.created += 1;
-        else stats.updated += 1;
-        if (outcome === 'conflict') stats.conflicts += 1;
+        // A per-entry failure (e.g. exhausted retries below) must not reject
+        // this task: Promise.all would abort the whole batch on the first
+        // rejection while sibling tasks keep running unawaited in the
+        // background, each still able to publish a stray sync:progress event
+        // for this run after its terminal sync:state has already gone out.
+        try {
+          const work = await resolveWork(raw.work);
+          const outcome = await applyEntry(
+            String(connection.userId),
+            connection.provider as ProviderId,
+            work.id,
+            raw,
+            work,
+          );
+          if (outcome === 'created') stats.created += 1;
+          else stats.updated += 1;
+          if (outcome === 'conflict') stats.conflicts += 1;
+        } catch (err) {
+          logger.error(
+            { err: (err as Error).message, provider: connection.provider },
+            'skipping one entry after a sync error',
+          );
+        }
 
         done += 1;
         if (done % 10 === 0 || done === raws.length) {
@@ -153,6 +165,24 @@ export async function runSync(opts: RunOptions): Promise<SyncStats> {
   return stats;
 }
 
+function isDuplicateKeyError(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000;
+}
+
+function isVersionError(err: unknown): boolean {
+  return err instanceof Error && err.name === 'VersionError';
+}
+
+const MAX_CONCURRENT_WRITE_ATTEMPTS = 5;
+
+/**
+ * Different providers routinely resolve to the same canonical Work (that is
+ * the point of merging sources), so two provider syncs running at once can
+ * both touch the same Entry document: both see it missing and race to create
+ * it (Entry has a unique userId+workId index), or both load it and race to
+ * save (Mongoose's version check rejects the loser). Both are retried against
+ * a fresh read rather than failing the whole sync over a normal race.
+ */
 async function applyEntry(
   userId: string,
   provider: ProviderId,
@@ -165,9 +195,7 @@ async function applyEntry(
     type: string;
   },
 ): Promise<'created' | 'updated' | 'conflict'> {
-  const existing = await Entry.findOne({ userId, workId });
   const now = new Date();
-
   const source = {
     provider,
     providerEntryId: raw.providerEntryId,
@@ -178,91 +206,108 @@ async function applyEntry(
     dirty: false,
   };
 
-  if (!existing) {
-    const merged = mergeSources([source]);
-    const created = await Entry.create({
-      userId,
-      workId,
-      type: work.type,
-      status: merged.status,
-      progress: merged.progress,
-      progressMax:
-        work.episodes ??
-        work.chapters ??
-        (work.type === 'book' ? work.runtime : null) ??
-        (work.type === 'movie' ? 1 : null),
-      score: merged.score,
-      repeats: raw.repeats ?? 0,
-      startedAt: raw.startedAt ? new Date(raw.startedAt) : null,
-      completedAt: raw.completedAt ? new Date(raw.completedAt) : null,
-      sources: [source],
-      hasConflict: merged.hasConflict,
-      conflictKinds: merged.conflictKinds,
-    });
-    if (raw.progress > 0) {
+  for (let attempt = 1; attempt <= MAX_CONCURRENT_WRITE_ATTEMPTS; attempt++) {
+    const existing = await Entry.findOne({ userId, workId });
+
+    if (!existing) {
+      const merged = mergeSources([source]);
+      try {
+        const created = await Entry.create({
+          userId,
+          workId,
+          type: work.type,
+          status: merged.status,
+          progress: merged.progress,
+          progressMax:
+            work.episodes ??
+            work.chapters ??
+            (work.type === 'book' ? work.runtime : null) ??
+            (work.type === 'movie' ? 1 : null),
+          score: merged.score,
+          repeats: raw.repeats ?? 0,
+          startedAt: raw.startedAt ? new Date(raw.startedAt) : null,
+          completedAt: raw.completedAt ? new Date(raw.completedAt) : null,
+          sources: [source],
+          hasConflict: merged.hasConflict,
+          conflictKinds: merged.conflictKinds,
+        });
+        if (raw.progress > 0) {
+          await ActivityLog.create({
+            userId,
+            workId,
+            type: work.type,
+            kind: raw.completedAt ? 'completed' : 'progress',
+            delta: raw.progress,
+            minutes: estimateMinutes({
+              type: work.type as never,
+              progress: raw.progress,
+              runtime: work.runtime,
+              episodeDuration: null,
+            }),
+            at: raw.completedAt ? new Date(raw.completedAt) : new Date(raw.updatedAt),
+            source: provider,
+          });
+        }
+        void created;
+        return 'created';
+      } catch (err) {
+        if (isDuplicateKeyError(err) && attempt < MAX_CONCURRENT_WRITE_ATTEMPTS) continue;
+        throw err;
+      }
+    }
+
+    const prevProgress = existing.sources.find((s) => s.provider === provider)?.progress ?? 0;
+    const sources = [
+      ...existing.sources.filter((s) => s.provider !== provider).map((s) => s.toObject()),
+      source,
+    ];
+
+    const merged = mergeSources(
+      sources.map((s) => ({
+        provider: s.provider,
+        status: s.status,
+        progress: s.progress,
+        score: s.score ?? null,
+      })),
+    );
+
+    existing.set('sources', sources);
+    existing.status = merged.status;
+    existing.progress = merged.progress;
+    existing.score = merged.score;
+    existing.hasConflict = merged.hasConflict;
+    existing.conflictKinds = merged.conflictKinds;
+    if (!existing.startedAt && raw.startedAt) existing.startedAt = new Date(raw.startedAt);
+    if (raw.completedAt) existing.completedAt = new Date(raw.completedAt);
+
+    try {
+      await existing.save();
+    } catch (err) {
+      if (isVersionError(err) && attempt < MAX_CONCURRENT_WRITE_ATTEMPTS) continue;
+      throw err;
+    }
+
+    const gained = raw.progress - prevProgress;
+    if (gained > 0) {
       await ActivityLog.create({
         userId,
         workId,
         type: work.type,
         kind: raw.completedAt ? 'completed' : 'progress',
-        delta: raw.progress,
+        delta: gained,
         minutes: estimateMinutes({
           type: work.type as never,
-          progress: raw.progress,
+          progress: gained,
           runtime: work.runtime,
           episodeDuration: null,
         }),
-        at: raw.completedAt ? new Date(raw.completedAt) : new Date(raw.updatedAt),
+        at: new Date(raw.updatedAt),
         source: provider,
       });
     }
-    void created;
-    return 'created';
+
+    return merged.hasConflict ? 'conflict' : 'updated';
   }
 
-  const prevProgress = existing.sources.find((s) => s.provider === provider)?.progress ?? 0;
-  const sources = [
-    ...existing.sources.filter((s) => s.provider !== provider).map((s) => s.toObject()),
-    source,
-  ];
-
-  const merged = mergeSources(
-    sources.map((s) => ({
-      provider: s.provider,
-      status: s.status,
-      progress: s.progress,
-      score: s.score ?? null,
-    })),
-  );
-
-  existing.set('sources', sources);
-  existing.status = merged.status;
-  existing.progress = merged.progress;
-  existing.score = merged.score;
-  existing.hasConflict = merged.hasConflict;
-  existing.conflictKinds = merged.conflictKinds;
-  if (!existing.startedAt && raw.startedAt) existing.startedAt = new Date(raw.startedAt);
-  if (raw.completedAt) existing.completedAt = new Date(raw.completedAt);
-  await existing.save();
-
-  const gained = raw.progress - prevProgress;
-  if (gained > 0) {
-    await ActivityLog.create({
-      userId,
-      workId,
-      type: work.type,
-      kind: raw.completedAt ? 'completed' : 'progress',
-      delta: gained,
-      minutes: estimateMinutes({
-        type: work.type as never,
-        progress: gained,
-        runtime: work.runtime,
-        episodeDuration: null,
-      }),
-      at: new Date(raw.updatedAt),
-      source: provider,
-    });
-  }
-
-  return merged.hasConflict ? 'conflict' : 'updated';
+  throw new Error('applyEntry: exceeded retry attempts on a concurrent write conflict');
 }

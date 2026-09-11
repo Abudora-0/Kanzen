@@ -68,6 +68,54 @@ describe('runSync (demo mode)', () => {
     expect(withConflict).toBeGreaterThan(0);
   });
 
+  it('survives two providers syncing the same entries at once', async () => {
+    const user = await freshUser();
+    const anilist = await Connection.create({
+      userId: user._id,
+      provider: 'anilist',
+      encryptedTokens: encryptJson({ accessToken: 'demo' }),
+    });
+    const mal = await Connection.create({
+      userId: user._id,
+      provider: 'mal',
+      encryptedTokens: encryptJson({ accessToken: 'demo' }),
+    });
+
+    const anilistRun = await SyncRun.create({
+      userId: user._id,
+      connectionId: anilist._id,
+      provider: 'anilist',
+      mode: 'full',
+      state: 'queued',
+    });
+    const malRun = await SyncRun.create({
+      userId: user._id,
+      connectionId: mal._id,
+      provider: 'mal',
+      mode: 'full',
+      state: 'queued',
+    });
+
+    // Both providers resolve to the same canonical works (proven by the test
+    // above), so running them concurrently races both Entry.create (unique
+    // userId+workId index) and Entry.save (Mongoose's version check) on the
+    // same documents. Neither runSync call should throw or leave its run
+    // stuck: applyEntry retries against a fresh read instead of failing.
+    const [anilistStats, malStats] = await Promise.all([
+      runSync({ connection: anilist, mode: 'full', syncRunId: String(anilistRun._id) }),
+      runSync({ connection: mal, mode: 'full', syncRunId: String(malRun._id) }),
+    ]);
+
+    expect(anilistStats.fetched).toBeGreaterThan(0);
+    expect(malStats.fetched).toBeGreaterThan(0);
+
+    const runs = await SyncRun.find({ _id: { $in: [anilistRun._id, malRun._id] } });
+    expect(runs.map((r) => r.state)).toEqual(['done', 'done']);
+
+    const multiSource = await Entry.find({ userId: user._id, 'sources.1': { $exists: true } });
+    expect(multiSource.length).toBeGreaterThan(0);
+  });
+
   it('links franchise relations between works', async () => {
     const user = await freshUser();
     const conn = await Connection.create({
