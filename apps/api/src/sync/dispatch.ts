@@ -5,6 +5,7 @@ import { logger } from '../logger.js';
 import { SyncRun, type ConnectionDoc } from '../models/index.js';
 import { enqueueSync } from '../queue/queues.js';
 import { refreshInsightSnapshot } from '../insights/compute.js';
+import { publishEvent } from '../events/bus.js';
 import { runSync } from './engine.js';
 
 type DispatchInput = {
@@ -26,15 +27,20 @@ const STALE_RUN_MS = 320_000;
 /** Mark inline runs the platform killed mid-flight as failed instead of
  * leaving them stuck "running" forever. Scoped by an arbitrary Mongo filter
  * so callers can reap for one connection (before dispatching) or a whole
- * user (on page load). */
+ * user (on page load). A bulk update alone never reaches the browser, so a
+ * reaped run's live "syncing" state stuck around forever with no terminal
+ * event to clear it; each affected run gets its own sync:state event too. */
 export async function reapStaleSyncRuns(filter: Record<string, unknown>): Promise<void> {
+  const stale = await SyncRun.find({
+    ...filter,
+    jobId: null,
+    state: { $in: ['queued', 'running'] },
+    updatedAt: { $lt: new Date(Date.now() - STALE_RUN_MS) },
+  }).select('_id userId provider');
+  if (stale.length === 0) return;
+
   await SyncRun.updateMany(
-    {
-      ...filter,
-      jobId: null,
-      state: { $in: ['queued', 'running'] },
-      updatedAt: { $lt: new Date(Date.now() - STALE_RUN_MS) },
-    },
+    { _id: { $in: stale.map((run) => run._id) } },
     {
       $set: {
         state: 'failed',
@@ -42,6 +48,16 @@ export async function reapStaleSyncRuns(filter: Record<string, unknown>): Promis
         error: 'Timed out (exceeded the serverless function limit)',
       },
     },
+  );
+  await Promise.all(
+    stale.map((run) =>
+      publishEvent(String(run.userId), {
+        type: 'sync:state',
+        provider: run.provider as ProviderId,
+        runId: String(run._id),
+        state: 'failed',
+      }),
+    ),
   );
 }
 
@@ -107,5 +123,11 @@ async function runInline(
       { _id: syncRunId },
       { $set: { state: 'failed', finishedAt: new Date(), error: (err as Error).message } },
     ).catch(() => undefined);
+    await publishEvent(String(connection.userId), {
+      type: 'sync:state',
+      provider: connection.provider as ProviderId,
+      runId: syncRunId,
+      state: 'failed',
+    }).catch(() => undefined);
   }
 }
