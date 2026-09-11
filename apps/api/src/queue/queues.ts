@@ -3,11 +3,13 @@ import type { ProviderId } from '@kanzen/shared';
 import { createRedisConnection } from '../redis/redis.js';
 import { logger } from '../logger.js';
 
+// BullMQ's Worker class rejects a ':' in the queue name (Queue itself never
+// validated it, which is why this only surfaced once a real Worker started).
 export const QUEUE_NAMES = {
-  sync: 'kanzen:sync',
-  writeback: 'kanzen:writeback',
-  insights: 'kanzen:insights',
-  tokenRefresh: 'kanzen:token-refresh',
+  sync: 'kanzen-sync',
+  writeback: 'kanzen-writeback',
+  insights: 'kanzen-insights',
+  tokenRefresh: 'kanzen-token-refresh',
 } as const;
 
 export type SyncJob = {
