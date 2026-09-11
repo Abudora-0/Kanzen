@@ -85,25 +85,45 @@ export async function dispatchSync({ connection, mode }: DispatchInput) {
   const syncRunId = String((run._id as Types.ObjectId | string) ?? '');
 
   if (workerEnabled) {
-    await enqueueSync({
-      userId: String(connection.userId),
-      connectionId: String(connection._id),
-      provider: connection.provider as ProviderId,
-      mode,
-      syncRunId,
-    })
-      .then(async (job) => {
-        await SyncRun.updateOne({ _id: syncRunId }, { $set: { jobId: job.id ?? null } });
-      })
-      .catch(async (err) => {
-        logger.warn({ err: (err as Error).message }, 'enqueue failed, running sync inline');
-        await runInline(connection, mode, syncRunId);
+    try {
+      const job = await enqueueWithRetry({
+        userId: String(connection.userId),
+        connectionId: String(connection._id),
+        provider: connection.provider as ProviderId,
+        mode,
+        syncRunId,
       });
+      await SyncRun.updateOne({ _id: syncRunId }, { $set: { jobId: job.id ?? null } });
+    } catch (err) {
+      logger.warn(
+        { err: (err as Error).message, provider: connection.provider },
+        'enqueue failed after retries, running sync inline',
+      );
+      await runInline(connection, mode, syncRunId);
+    }
     return run;
   }
 
   await runInline(connection, mode, syncRunId);
   return run;
+}
+
+/**
+ * A transient Redis blip on enqueue used to fall straight through to running
+ * the sync inline, bound by Vercel's request time limit instead of the
+ * worker's unbounded one, for no better reason than a single failed attempt.
+ * Retry a couple of times first since the blip is usually gone a moment later.
+ */
+async function enqueueWithRetry(job: Parameters<typeof enqueueSync>[0], attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await enqueueSync(job);
+    } catch (err) {
+      if (attempt === attempts) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+    }
+  }
+  throw new Error('unreachable');
 }
 
 async function runInline(

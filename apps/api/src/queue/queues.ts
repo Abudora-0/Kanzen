@@ -65,20 +65,24 @@ export function getQueues() {
   return queues;
 }
 
+// Same rule as queue/worker names: BullMQ rejects a ':' in a custom job id
+// too ("Custom Id cannot contain :"). This silently threw on every single
+// enqueue call, meaning every sync fell back to running inline the whole
+// time the worker was "enabled" - it never actually reached the worker.
 export async function enqueueSync(job: SyncJob) {
-  return getQueues().sync.add('sync', job, { jobId: `sync:${job.syncRunId}` });
+  return getQueues().sync.add('sync', job, { jobId: `sync-${job.syncRunId}` });
 }
 
 export async function enqueueWriteback(job: WritebackJob) {
   return getQueues().writeback.add('writeback', job, {
-    jobId: `wb:${job.entryId}`,
+    jobId: `wb-${job.entryId}`,
     delay: 2500,
   });
 }
 
 export async function enqueueInsights(job: InsightsJob) {
   return getQueues().insights.add('insights', job, {
-    jobId: `insights:${job.userId}`,
+    jobId: `insights-${job.userId}`,
     delay: 1500,
   });
 }
