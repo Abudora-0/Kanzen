@@ -42,7 +42,13 @@ function build(provider: ProviderId): ProviderLimiter {
   });
 
   const breaker = new CircuitBreaker((fn: () => Promise<unknown>) => fn(), {
-    timeout: 20_000,
+    // fetchLibrary paginates internally for some providers (AniList chunks by
+    // 250, Kitsu pages up to 40x250), so one call can mean many sequential
+    // HTTP round trips for a large library. 20s was fine for a single
+    // request; it started failing large libraries once sync moved off the
+    // serverless request budget and onto the worker, which has no such
+    // external deadline to protect.
+    timeout: 120_000,
     errorThresholdPercentage: 50,
     resetTimeout: 30_000,
     name: `provider:${provider}`,
