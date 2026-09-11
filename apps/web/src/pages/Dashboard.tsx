@@ -104,7 +104,7 @@ export function Dashboard() {
               {inProgress.data!.items.slice(0, 6).map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3 py-2">
                   <button
-                    className="group -mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-[10px] px-2 py-1 text-left transition hover:bg-surface-2/70"
+                    className="group -mx-2 flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-[10px] px-2 py-1 text-left transition hover:bg-surface-2/70"
                     onClick={() => navigate(`/library/${entry.id}`)}
                   >
                     <CoverImage
