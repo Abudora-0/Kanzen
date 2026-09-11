@@ -8,7 +8,10 @@ export function RadarChart({ axes, size = 300 }: Props) {
   const data = axes.slice(0, 8);
   const cx = size / 2;
   const cy = size / 2;
-  const r = size / 2 - 62;
+  // Left/right-anchored labels extend outward from their point rather than
+  // wrapping, so a long tag like "coming of age" needs real margin between
+  // the circle and the viewBox edge or it clips off the side entirely.
+  const r = size / 2 - 80;
 
   const points = useMemo(() => {
     return data.map((axis, i) => {
@@ -19,8 +22,8 @@ export function RadarChart({ axes, size = 300 }: Props) {
         angle,
         x: cx + Math.cos(angle) * r * value,
         y: cy + Math.sin(angle) * r * value,
-        lx: cx + Math.cos(angle) * (r + 26),
-        ly: cy + Math.sin(angle) * (r + 26),
+        lx: cx + Math.cos(angle) * (r + 20),
+        ly: cy + Math.sin(angle) * (r + 20),
       };
     });
   }, [data, cx, cy, r]);
@@ -82,7 +85,7 @@ export function RadarChart({ axes, size = 300 }: Props) {
             className="fill-[var(--color-ink-soft)] text-[10px]"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            {p.label.length > 14 ? `${p.label.slice(0, 13)}…` : p.label}
+            {p.label.length > 10 ? `${p.label.slice(0, 9)}…` : p.label}
           </text>
         </g>
       ))}

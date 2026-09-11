@@ -60,7 +60,7 @@ export function Insights() {
       </div>
 
       <Panel>
-        <SectionTitle eyebrow="one $facet, five cuts">Library profile</SectionTitle>
+        <SectionTitle eyebrow="one facet, five cuts">Library profile</SectionTitle>
         <div className="grid gap-6 md:grid-cols-3">
           <div>
             <p className="mb-2 text-xs uppercase tracking-wide text-ink-faint">status</p>

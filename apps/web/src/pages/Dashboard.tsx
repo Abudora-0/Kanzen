@@ -146,13 +146,13 @@ export function Dashboard() {
       </div>
 
       <Panel>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <SectionTitle eyebrow="what you are watching now" className="mb-0">
             Constellation
           </SectionTitle>
           <Link
             to="/library?view=constellation"
-            className="text-sm text-aurora-teal hover:text-ink"
+            className="whitespace-nowrap text-sm text-aurora-teal hover:text-ink"
           >
             open full map
           </Link>
