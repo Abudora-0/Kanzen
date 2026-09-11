@@ -32,6 +32,8 @@ const schema = z.object({
   MAL_CLIENT_SECRET: z.string().optional(),
   TMDB_READ_TOKEN: z.string().optional(),
 
+  RESEND_API_KEY: z.string().optional(),
+
   CRON_SECRET: z.string().default('dev-cron-secret'),
 
   /** Set by the worker process so queue consumers start. */
